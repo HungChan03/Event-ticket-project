@@ -14,6 +14,8 @@ const mongoose = require("mongoose");
 */
 
 const userSchema = new mongoose.Schema({
+  // Custom ID based on role
+  customId: { type: String, unique: true, sparse: true },
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
@@ -28,7 +30,45 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: Date
 }, { timestamps: true });
 
+// Function để generate custom ID theo role
+userSchema.statics.generateCustomId = async function(role) {
+  const prefixes = {
+    'admin': 'ADMIN',
+    'organizer': 'ORG',
+    'user': 'USER',
+    'guest': 'GUEST'
+  };
+  
+  const prefix = prefixes[role] || 'USER';
+  
+  // Tìm user cuối cùng có cùng role
+  const lastUser = await this.findOne({ 
+    customId: { $regex: `^${prefix}` } 
+  }).sort({ customId: -1 });
+  
+  let nextNumber = 1;
+  if (lastUser && lastUser.customId) {
+    const lastNumber = parseInt(lastUser.customId.replace(prefix, ''));
+    nextNumber = lastNumber + 1;
+  }
+  
+  return `${prefix}${nextNumber.toString().padStart(3, '0')}`;
+};
+
+// Middleware để tự động tạo customId trước khi save
+userSchema.pre('save', async function(next) {
+  if (!this.customId && this.role) {
+    try {
+      this.customId = await this.constructor.generateCustomId(this.role);
+    } catch (error) {
+      return next(error);
+    }
+  }
+  next();
+});
+
 // Tạo index để tra cứu email nhanh và đảm bảo uniqueness
 userSchema.index({ email: 1 });
+userSchema.index({ customId: 1 });
 
 module.exports = mongoose.model("User", userSchema);
