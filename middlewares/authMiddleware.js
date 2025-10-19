@@ -14,22 +14,29 @@ const getTokenFromRequest = (req) => {
 
 const attachUserFromToken = async (req) => {
   const token = getTokenFromRequest(req);
+  
   if (!token) {
     const error = new Error("Unauthorized");
     error.status = 401;
     throw error;
   }
 
-  const payload = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(payload.sub);
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(payload.sub);
 
-  if (!user) {
+    if (!user) {
+      const error = new Error("Unauthorized");
+      error.status = 401;
+      throw error;
+    }
+
+    req.user = user;
+  } catch (jwtError) {
     const error = new Error("Unauthorized");
     error.status = 401;
     throw error;
   }
-
-  req.user = user;
 };
 
 const ensureUserLoaded = async (req) => {
@@ -83,8 +90,20 @@ const authenticateOrganizer = async (req, res, next) => {
   }
 };
 
+// Middleware để attach user nếu có token (không bắt buộc)
+const optionalAuth = async (req, res, next) => {
+  try {
+    await attachUserFromToken(req);
+  } catch (error) {
+    // Không có token hoặc token không hợp lệ - không báo lỗi
+    // Chỉ đơn giản là không attach user
+  }
+  next();
+};
+
 module.exports = {
   authenticateAdmin,
   authenticateOrganizer,
   requireAuth,
+  optionalAuth,
 };

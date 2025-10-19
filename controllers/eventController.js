@@ -74,7 +74,7 @@ const createEvent = async (req, res) => {
       capacity: capacity ? parseInt(capacity) : 0,
       categories: categoriesData || [],
       ticketTypes: ticketTypesData || [],
-      organizer: '507f1f77bcf86cd799439011', // ID giả cho test
+      organizer: req.user.id, // Sử dụng ID từ token
       status: 'pending' // Mặc định là pending chờ admin duyệt
     };
 
@@ -121,11 +121,20 @@ const getEvents = async (req, res) => {
     // Xây dựng filter
     const filter = {};
     
-    // Chỉ hiển thị sự kiện đã được duyệt cho public
-    if (!req.user || req.user.role !== 'admin') {
+    // Guest (không auth): chỉ xem events approved
+    // Admin (có auth): xem tất cả events (approved, pending, rejected)
+    if (!req.user) {
+      // Guest: chỉ hiển thị events đã approved
       filter.status = 'approved';
-    } else if (status) {
-      filter.status = status;
+    } else if (req.user.role === 'admin') {
+      // Admin: có thể xem tất cả status, nếu có query status thì filter theo đó
+      if (status) {
+        filter.status = status;
+      }
+      // Nếu không có query status, admin xem tất cả (không filter status)
+    } else {
+      // User thường: chỉ xem events approved
+      filter.status = 'approved';
     }
 
     // Filter theo category
@@ -232,21 +241,21 @@ const updateEvent = async (req, res) => {
       });
     }
 
-    // Tạm thời bỏ kiểm tra quyền
-    // if (req.user.role !== 'admin' && event.organizer.toString() !== req.user.id) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Access denied. You can only edit your own events'
-    //   });
-    // }
+    // Kiểm tra quyền chỉnh sửa (User hoặc Admin)
+    if (req.user.role !== 'admin' && req.user.role !== 'user' && event.organizer.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only edit your own events'
+      });
+    }
 
-    // Tạm thời bỏ kiểm tra quyền
-    // if (event.status === 'approved' && req.user.role !== 'admin') {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: 'Cannot edit approved event. Contact admin for changes'
-    //   });
-    // }
+    // Không cho phép chỉnh sửa sự kiện đã được duyệt (trừ admin)
+    if (event.status === 'approved' && req.user.role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot edit approved event. Contact admin for changes'
+      });
+    }
 
     const {
       title,
@@ -315,10 +324,10 @@ const updateEvent = async (req, res) => {
       event.posterUrl = `/uploads/posters/${req.file.filename}`;
     }
 
-    // Tạm thời bỏ reset status
-    // if (event.status === 'approved' && req.user.role !== 'admin') {
-    //   event.status = 'pending';
-    // }
+    // Reset status về pending nếu organizer chỉnh sửa sự kiện đã được duyệt
+    if (event.status === 'approved' && req.user.role !== 'admin') {
+      event.status = 'pending';
+    }
 
     await event.save();
 
@@ -355,13 +364,13 @@ const deleteEvent = async (req, res) => {
       });
     }
 
-    // Tạm thời bỏ kiểm tra quyền xóa
-    // if (req.user.role !== 'admin' && event.organizer.toString() !== req.user.id) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Access denied. You can only delete your own events'
-    //   });
-    // }
+    // Kiểm tra quyền xóa (User hoặc Admin)
+    if (req.user.role !== 'admin' && req.user.role !== 'user' && event.organizer.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only delete your own events'
+      });
+    }
 
     // Xóa file poster nếu có
     if (event.posterUrl) {
@@ -388,9 +397,9 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-// @desc    Lấy sự kiện của organizer
-// @route   GET /api/events/organizer/my-events
-// @access  Private (Organizer)
+// @desc    Lấy sự kiện của user
+// @route   GET /api/events/my-events
+// @access  Private (User)
 const getMyEvents = async (req, res) => {
   try {
     const {
@@ -399,7 +408,7 @@ const getMyEvents = async (req, res) => {
       status
     } = req.query;
 
-    const filter = { organizer: '507f1f77bcf86cd799439011' }; // ID giả cho test
+    const filter = { organizer: req.user.id }; // Sử dụng ID từ token
     if (status) {
       filter.status = status;
     }
@@ -434,12 +443,12 @@ const getMyEvents = async (req, res) => {
   }
 };
 
-// @desc    Thống kê sự kiện của organizer
-// @route   GET /api/events/organizer/stats
-// @access  Private (Organizer)
+// @desc    Thống kê sự kiện của user
+// @route   GET /api/events/my-stats
+// @access  Private (User)
 const getEventStats = async (req, res) => {
   try {
-    const events = await Event.find({ organizer: '507f1f77bcf86cd799439011' }); // ID giả cho test
+    const events = await Event.find({ organizer: req.user.id }); // Sử dụng ID từ token
 
     const stats = {
       totalEvents: events.length,
