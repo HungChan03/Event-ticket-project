@@ -16,17 +16,28 @@ const mongoose = require("mongoose");
     - purchasedAt: thời gian mua vé.
 */
 
-const ticketSchema = new mongoose.Schema({
-  event: { type: mongoose.Schema.Types.ObjectId, ref: "Event", required: true },
-  order: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  ticketType: { type: String },
-  seat: { type: String },
-  pricePaid: { type: Number, min: 0 },
-  qrCode: { type: String, unique: true, sparse: true },
-  status: { type: String, enum: ["valid", "used", "cancelled", "refunded"], default: "valid" },
-  purchasedAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+const ticketSchema = new mongoose.Schema(
+  {
+    event: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      required: true,
+    },
+    order: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    ticketType: { type: String },
+    seat: { type: String },
+    pricePaid: { type: Number, min: 0 },
+    qrCode: { type: String, unique: true, sparse: true },
+    status: {
+      type: String,
+      enum: ["valid", "used", "cancelled", "refunded"],
+      default: "valid",
+    },
+    purchasedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true, collection: "" }
+);
 
 // Index giúp tra cứu vé theo qrCode nhanh hơn
 ticketSchema.index({ qrCode: 1 });
