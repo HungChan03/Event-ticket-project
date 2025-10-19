@@ -16,8 +16,7 @@ const getAllUsers = async (req, res) => {
     const filter = {
       $or: [
         { name: searchRegex },
-        { email: searchRegex },
-        { customId: searchRegex }
+        { email: searchRegex }
       ]
     };
     
