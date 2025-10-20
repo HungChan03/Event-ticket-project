@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Event = require('../models/Event');
+const Ticket = require('../models/Ticket');
 const bcrypt = require('bcryptjs');
 
 // Lấy danh sách tất cả users (có phân trang)
@@ -743,6 +744,436 @@ const getEventStats = async (req, res) => {
   }
 };
 
+// ==================== TICKET MANAGEMENT FUNCTIONS ====================
+
+// Lấy danh sách tất cả vé (có phân trang và filter)
+const getAllTickets = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Filter options
+    const { eventId, status, ticketType, ownerId, search } = req.query;
+    
+    const filter = {};
+    
+    // Filter theo event
+    if (eventId) {
+      filter.event = eventId;
+    }
+    
+    // Filter theo status
+    if (status) {
+      filter.status = status;
+    }
+    
+    // Filter theo ticketType
+    if (ticketType) {
+      filter.ticketType = ticketType;
+    }
+    
+    // Filter theo owner
+    if (ownerId) {
+      filter.owner = ownerId;
+    }
+    
+    // Tìm kiếm theo QR code
+    if (search) {
+      filter.qrCode = new RegExp(search, 'i');
+    }
+    
+    const tickets = await Ticket.find(filter)
+      .populate('event', 'title startDate endDate venue')
+      .populate('owner', 'name email phone')
+      .populate('order', 'orderNumber totalAmount status')
+      .sort({ purchasedAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const totalTickets = await Ticket.countDocuments(filter);
+    const totalPages = Math.ceil(totalTickets / limit);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        tickets,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalTickets,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy danh sách vé',
+      error: error.message
+    });
+  }
+};
+
+// Lấy thông tin chi tiết một vé
+const getTicketById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const ticket = await Ticket.findById(id)
+      .populate('event', 'title startDate endDate venue description posterUrl')
+      .populate('owner', 'name email phone avatarUrl')
+      .populate('order', 'orderNumber totalAmount status paymentMethod');
+    
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy vé'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: ticket
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy thông tin vé',
+      error: error.message
+    });
+  }
+};
+
+// Lấy danh sách vé theo event
+const getTicketsByEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Kiểm tra event có tồn tại không
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy sự kiện'
+      });
+    }
+    
+    const filter = { event: eventId };
+    
+    // Filter theo status nếu có
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+    
+    // Filter theo ticketType nếu có
+    if (req.query.ticketType) {
+      filter.ticketType = req.query.ticketType;
+    }
+    
+    const tickets = await Ticket.find(filter)
+      .populate('owner', 'name email phone')
+      .populate('order', 'orderNumber totalAmount status')
+      .sort({ purchasedAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const totalTickets = await Ticket.countDocuments(filter);
+    const totalPages = Math.ceil(totalTickets / limit);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        event: {
+          _id: event._id,
+          title: event.title,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          venue: event.venue
+        },
+        tickets,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalTickets,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy danh sách vé theo sự kiện',
+      error: error.message
+    });
+  }
+};
+
+// Thống kê vé tổng quan
+const getTicketStats = async (req, res) => {
+  try {
+    const totalTickets = await Ticket.countDocuments();
+    const validTickets = await Ticket.countDocuments({ status: 'valid' });
+    const usedTickets = await Ticket.countDocuments({ status: 'used' });
+    const cancelledTickets = await Ticket.countDocuments({ status: 'cancelled' });
+    const refundedTickets = await Ticket.countDocuments({ status: 'refunded' });
+    
+    // Thống kê theo status
+    const ticketsByStatus = await Ticket.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Thống kê theo loại vé
+    const ticketsByType = await Ticket.aggregate([
+      {
+        $group: {
+          _id: '$ticketType',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$pricePaid' }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    // Thống kê theo sự kiện
+    const ticketsByEvent = await Ticket.aggregate([
+      {
+        $lookup: {
+          from: 'events',
+          localField: 'event',
+          foreignField: '_id',
+          as: 'eventInfo'
+        }
+      },
+      { $unwind: '$eventInfo' },
+      {
+        $group: {
+          _id: '$event',
+          eventTitle: { $first: '$eventInfo.title' },
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$pricePaid' }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+    
+    // Thống kê theo tháng
+    const ticketsByMonth = await Ticket.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: '$purchasedAt' },
+            month: { $month: '$purchasedAt' }
+          },
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$pricePaid' }
+        }
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } },
+      { $limit: 12 }
+    ]);
+    
+    // Vé gần đây nhất
+    const recentTickets = await Ticket.find()
+      .populate('event', 'title')
+      .populate('owner', 'name email')
+      .sort({ purchasedAt: -1 })
+      .limit(10);
+    
+    // Tổng doanh thu
+    const totalRevenue = await Ticket.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$pricePaid' }
+        }
+      }
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        totalTickets,
+        validTickets,
+        usedTickets,
+        cancelledTickets,
+        refundedTickets,
+        ticketsByStatus,
+        ticketsByType,
+        ticketsByEvent,
+        ticketsByMonth,
+        recentTickets,
+        totalRevenue: totalRevenue[0]?.total || 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy thống kê vé',
+      error: error.message
+    });
+  }
+};
+
+// Thống kê vé theo sự kiện cụ thể
+const getTicketStatsByEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    
+    // Kiểm tra event có tồn tại không
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy sự kiện'
+      });
+    }
+    
+    const totalTickets = await Ticket.countDocuments({ event: eventId });
+    const validTickets = await Ticket.countDocuments({ event: eventId, status: 'valid' });
+    const usedTickets = await Ticket.countDocuments({ event: eventId, status: 'used' });
+    const cancelledTickets = await Ticket.countDocuments({ event: eventId, status: 'cancelled' });
+    const refundedTickets = await Ticket.countDocuments({ event: eventId, status: 'refunded' });
+    
+    // Thống kê theo loại vé trong sự kiện
+    const ticketsByType = await Ticket.aggregate([
+      { $match: { event: eventId } },
+      {
+        $group: {
+          _id: '$ticketType',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$pricePaid' }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    // Thống kê theo status trong sự kiện
+    const ticketsByStatus = await Ticket.aggregate([
+      { $match: { event: eventId } },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Tổng doanh thu của sự kiện
+    const totalRevenue = await Ticket.aggregate([
+      { $match: { event: eventId } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$pricePaid' }
+        }
+      }
+    ]);
+    
+    // So sánh với capacity của event
+    const capacityUtilization = event.capacity > 0 ? (totalTickets / event.capacity) * 100 : 0;
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        event: {
+          _id: event._id,
+          title: event.title,
+          capacity: event.capacity,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          venue: event.venue
+        },
+        totalTickets,
+        validTickets,
+        usedTickets,
+        cancelledTickets,
+        refundedTickets,
+        ticketsByType,
+        ticketsByStatus,
+        totalRevenue: totalRevenue[0]?.total || 0,
+        capacityUtilization: Math.round(capacityUtilization * 100) / 100
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy thống kê vé theo sự kiện',
+      error: error.message
+    });
+  }
+};
+
+// Cập nhật trạng thái vé (admin có thể cancel hoặc refund vé)
+const updateTicketStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+    
+    const ticket = await Ticket.findById(id)
+      .populate('event', 'title')
+      .populate('owner', 'name email');
+    
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy vé'
+      });
+    }
+    
+    // Kiểm tra status hợp lệ
+    const validStatuses = ['valid', 'used', 'cancelled', 'refunded'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Trạng thái vé không hợp lệ'
+      });
+    }
+    
+    // Không cho phép chuyển từ used về valid
+    if (ticket.status === 'used' && status === 'valid') {
+      return res.status(400).json({
+        success: false,
+        message: 'Không thể chuyển vé đã sử dụng về trạng thái hợp lệ'
+      });
+    }
+    
+    const updatedTicket = await Ticket.findByIdAndUpdate(
+      id,
+      { 
+        status,
+        ...(reason && { adminNote: reason })
+      },
+      { new: true }
+    ).populate('event', 'title')
+     .populate('owner', 'name email')
+     .populate('order', 'orderNumber');
+    
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật trạng thái vé thành công',
+      data: updatedTicket
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi cập nhật trạng thái vé',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // User management
   getAllUsers,
@@ -762,5 +1193,13 @@ module.exports = {
   rejectEvent,
   cancelEvent,
   deleteEvent,
-  getEventStats
+  getEventStats,
+  
+  // Ticket management
+  getAllTickets,
+  getTicketById,
+  getTicketsByEvent,
+  getTicketStats,
+  getTicketStatsByEvent,
+  updateTicketStatus
 };

@@ -16,14 +16,20 @@ const {
   rejectEvent,
   cancelEvent,
   deleteEvent,
-  getEventStats
+  getEventStats,
+  getAllTickets,
+  getTicketById,
+  getTicketsByEvent,
+  getTicketStats,
+  getTicketStatsByEvent,
+  updateTicketStatus
 } = require('../controllers/adminController');
 
-// Middleware để kiểm tra quyền admin (tạm thời comment để test)
-// const { authenticateAdmin } = require('../middlewares/authMiddleware');
+// Middleware để kiểm tra quyền admin
+const { authenticateAdmin } = require('../middlewares/authMiddleware');
 
-// Áp dụng middleware authentication cho tất cả routes admin (tạm thời comment để test)
-// router.use(authenticateAdmin);
+// Áp dụng middleware authentication cho tất cả routes admin
+router.use(authenticateAdmin);
 
 // Routes cho quản lý users
 router.get('/users', getAllUsers);                    // GET /api/admin/users - Lấy danh sách users
@@ -44,5 +50,13 @@ router.patch('/events/:id/approve', approveEvent);     // PATCH /api/admin/event
 router.patch('/events/:id/reject', rejectEvent);       // PATCH /api/admin/events/:id/reject - Từ chối event
 router.patch('/events/:id/cancel', cancelEvent);       // PATCH /api/admin/events/:id/cancel - Hủy event
 router.delete('/events/:id', deleteEvent);             // DELETE /api/admin/events/:id - Xóa event
+
+// Routes cho quản lý tickets
+router.get('/tickets', getAllTickets);                 // GET /api/admin/tickets - Lấy danh sách vé
+router.get('/tickets/stats', getTicketStats);          // GET /api/admin/tickets/stats - Thống kê vé tổng quan
+router.get('/tickets/:id', getTicketById);             // GET /api/admin/tickets/:id - Lấy thông tin vé theo ID
+router.get('/events/:eventId/tickets', getTicketsByEvent); // GET /api/admin/events/:eventId/tickets - Lấy vé theo sự kiện
+router.get('/events/:eventId/tickets/stats', getTicketStatsByEvent); // GET /api/admin/events/:eventId/tickets/stats - Thống kê vé theo sự kiện
+router.patch('/tickets/:id/status', updateTicketStatus); // PATCH /api/admin/tickets/:id/status - Cập nhật trạng thái vé
 
 module.exports = router;
