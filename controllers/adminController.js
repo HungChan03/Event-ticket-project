@@ -22,7 +22,7 @@ const getAllUsers = async (req, res) => {
     };
     
     const users = await User.find(filter)
-      .select('-password -resetPasswordToken -resetPasswordExpires')
+      .select('-passwordHash -resetPasswordToken -resetPasswordExpires')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -58,7 +58,7 @@ const getUserById = async (req, res) => {
     const { id } = req.params;
     
     const user = await User.findById(id)
-      .select('-password -resetPasswordToken -resetPasswordExpires');
+      .select('-passwordHash -resetPasswordToken -resetPasswordExpires');
     
     if (!user) {
       return res.status(404).json({
@@ -101,7 +101,7 @@ const createUser = async (req, res) => {
     const newUser = new User({
       name,
       email,
-      password: hashedPassword,
+      passwordHash: hashedPassword,
       role: role || 'user',
       phone,
       avatarUrl,
@@ -110,9 +110,9 @@ const createUser = async (req, res) => {
     
     await newUser.save();
     
-    // Trả về user không bao gồm password
+    // Trả về user không bao gồm passwordHash
     const userResponse = await User.findById(newUser._id)
-      .select('-password -resetPasswordToken -resetPasswordExpires');
+      .select('-passwordHash -resetPasswordToken -resetPasswordExpires');
     
     res.status(201).json({
       success: true,
@@ -207,7 +207,7 @@ const changeUserPassword = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     
-    await User.findByIdAndUpdate(id, { password: hashedPassword });
+    await User.findByIdAndUpdate(id, { passwordHash: hashedPassword });
     
     res.status(200).json({
       success: true,
@@ -275,7 +275,7 @@ const getUserStats = async (req, res) => {
     ]);
     
     const recentUsers = await User.find()
-      .select('-password -resetPasswordToken -resetPasswordExpires')
+      .select('-passwordHash -resetPasswordToken -resetPasswordExpires')
       .sort({ createdAt: -1 })
       .limit(5);
     
