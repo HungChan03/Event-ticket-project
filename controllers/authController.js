@@ -33,7 +33,7 @@ exports.register = async (req, res, next) => {
       name,
       email,
       passwordHash: hashed,
-      role: "user",
+      role: role || "user", // Cho phép set role từ request body
       phone,
       avatarUrl,
     });
