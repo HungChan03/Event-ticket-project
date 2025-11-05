@@ -5,6 +5,7 @@ const axios = require("axios");
 const Event = require("../models/Event");
 const Ticket = require("../models/Ticket");
 const { sendOrderReceipt } = require("../utils/mailer");
+const { uploadQrImageToCloudinary, generateRandomQrPayload } = require("../utils/generateQRCode");
 
 // Env configuration with sensible defaults for MoMo UAT
 const MOMO_PARTNER_CODE = process.env.MOMO_PARTNER_CODE || "MOMO";
@@ -136,7 +137,12 @@ exports.cancelOrderForUser = async (req, res) => {
   }
 };
 
-// Helper: issue tickets for a paid order (idempotent)
+/**
+ * Tạo vé  tương ứng cho đơn hàng (order) sau khi thanh toán thành công.
+ * 
+ * @param {*} orderDoc - Document (object) của đơn hàng (Order) đã được lưu trong MongoDB.
+ * @returns {Promise<void>} - Không trả về giá trị, chỉ thực hiện thao tác tạo vé và cập nhật order.
+ */
 async function issueTicketsForOrder(orderDoc) {
   if (!orderDoc || !orderDoc.items || !orderDoc.event) return;
   const existingCount = Array.isArray(orderDoc.ticketRefs) ? orderDoc.ticketRefs.length : 0;
@@ -146,7 +152,11 @@ async function issueTicketsForOrder(orderDoc) {
   const tickets = [];
   for (const it of orderDoc.items) {
     for (let i = 0; i < it.quantity; i++) {
-      const qr = crypto.randomBytes(16).toString("hex");
+      const qr = generateRandomQrPayload(16);
+      let qrImageUrl = null;
+      try {
+        qrImageUrl = await uploadQrImageToCloudinary(qr, { folder: `tickets/${orderDoc.event.toString()}` });
+      } catch (_) {}
       const t = await Ticket.create({
         event: orderDoc.event,
         order: orderDoc._id,
@@ -154,6 +164,7 @@ async function issueTicketsForOrder(orderDoc) {
         ticketType: it.ticketType,
         pricePaid: it.price,
         qrCode: qr,
+        qrImageUrl,
         status: "valid",
       });
       tickets.push(t._id);

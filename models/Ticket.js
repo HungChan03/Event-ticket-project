@@ -29,6 +29,8 @@ const ticketSchema = new mongoose.Schema(
     seat: { type: String },
     pricePaid: { type: Number, min: 0 },
     qrCode: { type: String, unique: true, sparse: true },
+    // URL ảnh QR được lưu trên Cloudinary (tùy chọn)
+    qrImageUrl: { type: String },
     status: {
       type: String,
       enum: ["valid", "used", "cancelled", "refunded"],
