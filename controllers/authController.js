@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const User = require("../models/User");
 const sendToken = require("../utils/sendToken");
-const sendMail = require("../utils/sendEmail");
+const { sendMail } = require("../utils/mailer");
 
 function sanitize(userDoc) {
   const obj = userDoc.toObject();
@@ -15,7 +15,7 @@ function sanitize(userDoc) {
 // POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, avatarUrl } = req.body;
+    const { name, email, password, phone, avatarUrl, role } = req.body;
 
     if (!name || !email || !password) {
       return res

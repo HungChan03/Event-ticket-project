@@ -212,9 +212,22 @@ const getEventById = async (req, res) => {
       });
     }
 
+    const evt = event.toObject();
+    const ticketTypes = Array.isArray(evt.ticketTypes) ? evt.ticketTypes.map(t => ({
+      ...t,
+      remaining: (t.quantity || 0) - (t.sold || 0)
+    })) : [];
+    const totals = {
+      capacity: evt.capacity || 0,
+      sold: ticketTypes.reduce((s, t) => s + (t.sold || 0), 0),
+      remaining: ticketTypes.reduce((s, t) => s + ((t.quantity || 0) - (t.sold || 0)), 0)
+    };
+    evt.ticketTypes = ticketTypes;
+    evt.totals = totals;
+
     res.json({
       success: true,
-      data: event
+      data: evt
     });
 
   } catch (error) {

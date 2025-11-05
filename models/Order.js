@@ -40,7 +40,11 @@ const orderSchema = new mongoose.Schema({
     name: String,
     email: String,
     phone: String
-  }
+  },
+  // expiresAt: thời điểm hết hạn thanh toán (không dùng TTL để xoá tự động)
+  expiresAt: { type: Date },
+  // emailSentAt: thời điểm đã gửi email biên nhận thành công
+  emailSentAt: { type: Date }
 }, { timestamps: true });
 
 // Index tối ưu truy vấn theo buyer và event
