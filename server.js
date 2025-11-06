@@ -22,6 +22,7 @@ const eventRoutes = require("./routes/eventRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const userRoutes = require("./routes/usersRoutes");
+const venueRoutes = require("./routes/venueRoutes");
 
 // Connect to MongoDB
 connectDB();
@@ -45,6 +46,7 @@ app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/tickets", ticketRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/venues", venueRoutes);
 
 app.get("/", (req, res) => res.send("API is running..."));
 

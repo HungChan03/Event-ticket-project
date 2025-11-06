@@ -24,6 +24,18 @@ const {
   getTicketStatsByEvent,
   updateTicketStatus
 } = require('../controllers/adminController');
+const {
+  createVenue,
+  getVenues,
+  getVenueById,
+  updateVenue,
+  deleteVenue
+} = require('../controllers/venueController');
+const {
+  validateCreateVenue,
+  validateUpdateVenue,
+  validateVenueQuery
+} = require('../middlewares/venueValidation');
 
 // Middleware để kiểm tra quyền admin
 const { authenticateAdmin } = require('../middlewares/authMiddleware');
@@ -58,5 +70,12 @@ router.get('/tickets/:id', getTicketById);             // GET /api/admin/tickets
 router.get('/events/:eventId/tickets', getTicketsByEvent); // GET /api/admin/events/:eventId/tickets - Lấy vé theo sự kiện
 router.get('/events/:eventId/tickets/stats', getTicketStatsByEvent); // GET /api/admin/events/:eventId/tickets/stats - Thống kê vé theo sự kiện
 router.patch('/tickets/:id/status', updateTicketStatus); // PATCH /api/admin/tickets/:id/status - Cập nhật trạng thái vé
+
+// Routes cho quản lý venues
+router.get('/venues', validateVenueQuery, getVenues); // GET /api/admin/venues - Lấy danh sách venues
+router.get('/venues/:id', getVenueById); // GET /api/admin/venues/:id - Lấy chi tiết venue
+router.post('/venues', validateCreateVenue, createVenue); // POST /api/admin/venues - Tạo venue mới
+router.put('/venues/:id', validateUpdateVenue, updateVenue); // PUT /api/admin/venues/:id - Cập nhật venue
+router.delete('/venues/:id', deleteVenue); // DELETE /api/admin/venues/:id - Xóa venue
 
 module.exports = router;

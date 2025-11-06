@@ -27,6 +27,15 @@ const eventSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   description: { type: String },
   posterUrl: { type: String },
+  venueId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Venue'
+  },
+  venueStatus: {
+    type: String,
+    default: 'active',
+    trim: true
+  },
   venue: {
     name: String,
     address: String,
