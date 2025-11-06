@@ -1,5 +1,65 @@
 // middlewares/eventValidation.js
 const { body, query, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+const Venue = require('../models/Venue');
+
+const parseMaybeJson = (value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const firstChar = trimmed[0];
+  const lastChar = trimmed[trimmed.length - 1];
+  if ((firstChar === '{' && lastChar === '}') || (firstChar === '[' && lastChar === ']')) {
+    try {
+      return JSON.parse(trimmed);
+    } catch (error) {
+      return trimmed;
+    }
+  }
+
+  return trimmed;
+};
+
+const extractVenueId = (venueInput) => {
+  if (!venueInput) return null;
+
+  if (typeof venueInput === 'string') {
+    return venueInput.trim();
+  }
+
+  if (typeof venueInput === 'object' && !Array.isArray(venueInput)) {
+    return venueInput.venueId || venueInput.id || venueInput._id || null;
+  }
+
+  return null;
+};
+
+const validateVenueReference = async (value) => {
+  if (value === undefined || value === null || value === '') {
+    throw new Error('Venue is required');
+  }
+
+  const venuePayload = parseMaybeJson(value);
+  const venueId = extractVenueId(venuePayload);
+
+  if (!venueId || !mongoose.Types.ObjectId.isValid(venueId)) {
+    throw new Error('Invalid venueId');
+  }
+
+  const venueExists = await Venue.exists({ _id: venueId });
+
+  if (!venueExists) {
+    throw new Error('Selected venue does not exist');
+  }
+
+  return true;
+};
 
 // Middleware để xử lý lỗi validation
 const handleValidationErrors = (req, res, next) => {
@@ -33,26 +93,7 @@ const validateCreateEvent = [
 
   // Validate venue
   body('venue')
-    .custom((value) => {
-      if (!value) {
-        throw new Error('Venue is required');
-      }
-      
-      let venueData = value;
-      if (typeof value === 'string') {
-        try {
-          venueData = JSON.parse(value);
-        } catch (e) {
-          throw new Error('Invalid venue format');
-        }
-      }
-      
-      if (!venueData.name || !venueData.address) {
-        throw new Error('Venue name and address are required');
-      }
-      
-      return true;
-    }),
+    .custom(validateVenueReference),
 
   // Validate startDate
   body('startDate')
@@ -190,24 +231,8 @@ const validateUpdateEvent = [
 
   // Validate venue
   body('venue')
-    .optional()
-    .custom((value) => {
-      if (value) {
-        let venueData = value;
-        if (typeof value === 'string') {
-          try {
-            venueData = JSON.parse(value);
-          } catch (e) {
-            throw new Error('Invalid venue format');
-          }
-        }
-        
-        if (!venueData.name || !venueData.address) {
-          throw new Error('Venue name and address are required');
-        }
-      }
-      return true;
-    }),
+    .optional({ checkFalsy: true })
+    .custom(validateVenueReference),
 
   // Validate startDate
   body('startDate')
@@ -365,3 +390,5 @@ module.exports = {
   validateEventQuery,
   handleValidationErrors
 };
+
+

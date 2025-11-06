@@ -1,8 +1,144 @@
 // controllers/eventController.js
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
+const Venue = require('../models/Venue');
 const User = require('../models/User');
 const path = require('path');
 const fs = require('fs');
+
+const EVENT_VENUE_STATUS = {
+  ACTIVE: 'active',
+  REMOVED: 'removed'
+};
+
+const parseMaybeJson = (value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const firstChar = trimmed[0];
+  const lastChar = trimmed[trimmed.length - 1];
+  if ((firstChar === '{' && lastChar === '}') || (firstChar === '[' && lastChar === ']')) {
+    try {
+      return JSON.parse(trimmed);
+    } catch (error) {
+      return trimmed;
+    }
+  }
+
+  return trimmed;
+};
+
+const extractVenueId = (venueInput) => {
+  if (!venueInput) return null;
+
+  if (typeof venueInput === 'string') {
+    return venueInput.trim();
+  }
+
+  if (typeof venueInput === 'object' && !Array.isArray(venueInput)) {
+    return venueInput.venueId || venueInput.id || venueInput._id || null;
+  }
+
+  return null;
+};
+
+const buildVenueSnapshot = (venueDoc) => ({
+  name: venueDoc.name,
+  address: venueDoc.address,
+  city: venueDoc.city,
+  state: venueDoc.state,
+  country: venueDoc.country
+});
+
+const computeTicketTotals = (ticketTypes = []) => ticketTypes.reduce((acc, ticket) => {
+  const sold = typeof ticket.sold === 'number' ? ticket.sold : 0;
+  const quantity = typeof ticket.quantity === 'number' ? ticket.quantity : 0;
+  return {
+    sold: acc.sold + sold,
+    quantity: acc.quantity + quantity
+  };
+}, { sold: 0, quantity: 0 });
+
+const sanitizeTicketTypes = (input, existingTicketTypes = []) => {
+  if (input === undefined || input === null) {
+    const totals = computeTicketTotals(existingTicketTypes);
+    return { ticketTypes: existingTicketTypes, totals };
+  }
+
+  if (!Array.isArray(input)) {
+    const error = new Error('Ticket types must be an array');
+    error.status = 400;
+    throw error;
+  }
+
+  const existingByName = new Map(
+    existingTicketTypes
+      .filter((ticket) => typeof ticket?.name === 'string')
+      .map((ticket) => [ticket.name, ticket])
+  );
+
+  const sanitized = input.map((ticketType, index) => {
+    const name = typeof ticketType.name === 'string' ? ticketType.name.trim() : '';
+    if (!name) {
+      const error = new Error(`Ticket type ${index + 1}: name is required`);
+      error.status = 400;
+      throw error;
+    }
+
+    const price = typeof ticketType.price === 'number'
+      ? ticketType.price
+      : parseFloat(ticketType.price);
+    if (Number.isNaN(price) || price < 0) {
+      const error = new Error(`Ticket type ${index + 1}: price must be a non-negative number`);
+      error.status = 400;
+      throw error;
+    }
+
+    const quantity = typeof ticketType.quantity === 'number'
+      ? ticketType.quantity
+      : parseInt(ticketType.quantity, 10);
+    if (Number.isNaN(quantity) || quantity < 0) {
+      const error = new Error(`Ticket type ${index + 1}: quantity must be a non-negative integer`);
+      error.status = 400;
+      throw error;
+    }
+
+    let sold;
+    if (ticketType.sold !== undefined) {
+      sold = typeof ticketType.sold === 'number'
+        ? ticketType.sold
+        : parseInt(ticketType.sold, 10);
+    } else {
+      sold = existingByName.get(name)?.sold ?? 0;
+    }
+
+    if (Number.isNaN(sold) || sold < 0) {
+      sold = 0;
+    }
+
+    if (quantity < sold) {
+      const error = new Error(`Ticket type ${index + 1}: quantity cannot be less than sold`);
+      error.status = 400;
+      throw error;
+    }
+
+    return {
+      name,
+      price,
+      quantity,
+      sold
+    };
+  });
+
+  const totals = computeTicketTotals(sanitized);
+  return { ticketTypes: sanitized, totals };
+};
 
 // @desc    Tạo sự kiện mới
 // @route   POST /api/events
@@ -29,39 +165,77 @@ const createEvent = async (req, res) => {
     }
 
     // Parse venue nếu là string
-    let venueData = venue;
-    if (typeof venue === 'string') {
-      try {
-        venueData = JSON.parse(venue);
-      } catch (e) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid venue format'
-        });
-      }
+    let venueData = parseMaybeJson(venue);
+    const venueId = extractVenueId(venueData);
+    if (!venueId || !mongoose.Types.ObjectId.isValid(venueId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid venueId is required to create an event'
+      });
     }
+
+    const venueDoc = await Venue.findById(venueId);
+    if (!venueDoc) {
+      return res.status(404).json({
+        success: false,
+        message: 'Selected venue not found'
+      });
+    }
+
+    venueData = buildVenueSnapshot(venueDoc);
 
     // Parse ticketTypes nếu là string
-    let ticketTypesData = ticketTypes;
-    if (typeof ticketTypes === 'string') {
-      try {
-        ticketTypesData = JSON.parse(ticketTypes);
-      } catch (e) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid ticket types format'
-        });
-      }
-    }
+    let ticketTypesData = parseMaybeJson(ticketTypes);
 
     // Parse categories nếu là string
-    let categoriesData = categories;
-    if (typeof categories === 'string') {
-      try {
-        categoriesData = JSON.parse(categories);
-      } catch (e) {
-        categoriesData = [categories];
-      }
+    let categoriesData = parseMaybeJson(categories);
+    if (categoriesData && !Array.isArray(categoriesData)) {
+      categoriesData = [categoriesData];
+    }
+
+    let sanitizedTicketTypes;
+    let ticketTotals;
+    try {
+      const result = sanitizeTicketTypes(ticketTypesData, []);
+      sanitizedTicketTypes = result.ticketTypes;
+      ticketTotals = result.totals;
+    } catch (validationError) {
+      return res.status(validationError.status || 400).json({
+        success: false,
+        message: validationError.message
+      });
+    }
+
+    const parsedCapacity = capacity ? parseInt(capacity, 10) : venueDoc.capacity;
+    if (Number.isNaN(parsedCapacity) || parsedCapacity < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Capacity must be an integer greater than zero'
+      });
+    }
+
+    if (parsedCapacity > venueDoc.capacity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Event capacity cannot exceed selected venue capacity',
+        data: {
+          venueCapacity: venueDoc.capacity
+        }
+      });
+    }
+
+    if (ticketTotals.quantity > parsedCapacity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Total ticket quantity cannot exceed event capacity'
+      });
+    }
+
+    if (ticketTotals.sold > parsedCapacity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tickets sold cannot exceed event capacity'
+      });
     }
 
     // Tạo sự kiện mới
@@ -71,14 +245,17 @@ const createEvent = async (req, res) => {
       venue: venueData,
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : null,
-      capacity: capacity ? parseInt(capacity) : 0,
+      capacity: parsedCapacity,
       categories: categoriesData || [],
-      ticketTypes: ticketTypesData || [],
+      ticketTypes: sanitizedTicketTypes,
       organizer: req.user.id, // Sử dụng ID từ token
       status: 'pending' // Mặc định là pending chờ admin duyệt
     };
 
-    // Thêm posterUrl nếu có upload file
+
+    eventData.venueId = venueDoc._id;
+    eventData.venueStatus = EVENT_VENUE_STATUS.ACTIVE;
+    // Th�m posterUrl n?u c� upload file
     if (req.file) {
       eventData.posterUrl = `/uploads/posters/${req.file.filename}`;
     }
@@ -254,7 +431,6 @@ const updateEvent = async (req, res) => {
       });
     }
 
-    // Kiểm tra quyền chỉnh sửa (User hoặc Admin)
     if (req.user.role !== 'admin' && req.user.role !== 'user' && event.organizer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -262,7 +438,6 @@ const updateEvent = async (req, res) => {
       });
     }
 
-    // Không cho phép chỉnh sửa sự kiện đã được duyệt (trừ admin)
     if (event.status === 'approved' && req.user.role !== 'admin') {
       return res.status(400).json({
         success: false,
@@ -281,53 +456,158 @@ const updateEvent = async (req, res) => {
       ticketTypes
     } = req.body;
 
-    // Parse các field phức tạp
-    let venueData = venue;
-    if (typeof venue === 'string') {
-      try {
-        venueData = JSON.parse(venue);
-      } catch (e) {
+    const venuePayload = parseMaybeJson(venue);
+    const venueInputProvided = venue !== undefined && venue !== null && venue !== '';
+    let venueDocForValidation = null;
+    let venueIdToUse = event.venueId || null;
+    let venueSnapshotToUse = event.venue;
+    let venueStatusToUse = event.venueStatus || EVENT_VENUE_STATUS.ACTIVE;
+
+    if (venueInputProvided) {
+      const venueIdCandidate = extractVenueId(venuePayload);
+      if (!venueIdCandidate || !mongoose.Types.ObjectId.isValid(venueIdCandidate)) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid venue format'
+          message: 'A valid venueId is required when updating the venue'
+        });
+      }
+
+      venueDocForValidation = await Venue.findById(venueIdCandidate);
+      if (!venueDocForValidation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Selected venue not found'
+        });
+      }
+
+      venueIdToUse = venueDocForValidation._id;
+      venueSnapshotToUse = buildVenueSnapshot(venueDocForValidation);
+      venueStatusToUse = EVENT_VENUE_STATUS.ACTIVE;
+    } else if (event.venueId) {
+      venueDocForValidation = await Venue.findById(event.venueId);
+      if (venueDocForValidation) {
+        venueSnapshotToUse = buildVenueSnapshot(venueDocForValidation);
+      }
+    }
+
+    const ticketTypesPayload = parseMaybeJson(ticketTypes);
+    let categoriesData = parseMaybeJson(categories);
+    if (categoriesData && !Array.isArray(categoriesData)) {
+      categoriesData = [categoriesData];
+    }
+
+    let sanitizedTicketTypes;
+    let ticketTotals;
+    try {
+      const result = sanitizeTicketTypes(ticketTypesPayload, event.ticketTypes || []);
+      sanitizedTicketTypes = result.ticketTypes;
+      ticketTotals = result.totals;
+    } catch (validationError) {
+      return res.status(validationError.status || 400).json({
+        success: false,
+        message: validationError.message
+      });
+    }
+
+    const capacityProvided = capacity !== undefined && capacity !== null;
+    const currentCapacity = typeof event.capacity === 'number' ? event.capacity : 0;
+    let nextCapacity = currentCapacity;
+
+    if (capacityProvided) {
+      nextCapacity = parseInt(capacity, 10);
+      if (Number.isNaN(nextCapacity) || nextCapacity < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Capacity must be a non-negative integer'
         });
       }
     }
 
-    let ticketTypesData = ticketTypes;
-    if (typeof ticketTypes === 'string') {
-      try {
-        ticketTypesData = JSON.parse(ticketTypes);
-      } catch (e) {
+    const capacityForValidation = capacityProvided ? nextCapacity : currentCapacity;
+    const capacityLimit = capacityForValidation > 0 ? capacityForValidation : null;
+
+    if (capacityLimit !== null && ticketTotals.sold > capacityLimit) {
+      return res.status(400).json({
+        success: false,
+        message: 'Capacity cannot be less than total tickets sold'
+      });
+    }
+
+    if (capacityLimit !== null && ticketTotals.quantity > capacityLimit) {
+      return res.status(400).json({
+        success: false,
+        message: 'Total ticket quantity cannot exceed event capacity'
+      });
+    }
+
+    const venueCapacityLimit = venueDocForValidation ? venueDocForValidation.capacity : null;
+    if (venueCapacityLimit && venueCapacityLimit > 0) {
+      if (capacityLimit !== null && capacityLimit > venueCapacityLimit) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid ticket types format'
+          message: 'Event capacity cannot exceed selected venue capacity',
+          data: {
+            venueCapacity: venueCapacityLimit
+          }
+        });
+      }
+
+      if (capacityLimit === null && ticketTotals.quantity > venueCapacityLimit) {
+        return res.status(400).json({
+          success: false,
+          message: 'Total ticket quantity cannot exceed selected venue capacity',
+          data: {
+            venueCapacity: venueCapacityLimit
+          }
+        });
+      }
+
+      if (ticketTotals.sold > venueCapacityLimit) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tickets sold cannot exceed selected venue capacity',
+          data: {
+            venueCapacity: venueCapacityLimit
+          }
         });
       }
     }
 
-    let categoriesData = categories;
-    if (typeof categories === 'string') {
-      try {
-        categoriesData = JSON.parse(categories);
-      } catch (e) {
-        categoriesData = [categories];
+    if (title) {
+      event.title = title;
+    }
+    if (description !== undefined) {
+      event.description = description;
+    }
+    if (startDate) {
+      event.startDate = new Date(startDate);
+    }
+    if (endDate) {
+      event.endDate = new Date(endDate);
+    }
+    if (categories !== undefined) {
+      event.categories = categoriesData || [];
+    }
+
+    event.ticketTypes = sanitizedTicketTypes;
+
+    if (capacityProvided) {
+      event.capacity = nextCapacity;
+    }
+
+    if (venueInputProvided && venueDocForValidation) {
+      event.venueId = venueIdToUse;
+      event.venue = venueSnapshotToUse;
+      event.venueStatus = venueStatusToUse;
+    } else if (!event.venueId && venueDocForValidation) {
+      event.venueId = venueDocForValidation._id;
+      event.venue = venueSnapshotToUse || event.venue;
+      if (event.venueStatus === EVENT_VENUE_STATUS.REMOVED) {
+        event.venueStatus = EVENT_VENUE_STATUS.ACTIVE;
       }
     }
 
-    // Cập nhật các field
-    if (title) event.title = title;
-    if (description !== undefined) event.description = description;
-    if (venueData) event.venue = venueData;
-    if (startDate) event.startDate = new Date(startDate);
-    if (endDate) event.endDate = new Date(endDate);
-    if (capacity !== undefined) event.capacity = parseInt(capacity);
-    if (categoriesData) event.categories = categoriesData;
-    if (ticketTypesData) event.ticketTypes = ticketTypesData;
-
-    // Cập nhật poster nếu có upload file mới
     if (req.file) {
-      // Xóa file poster cũ nếu có
       if (event.posterUrl) {
         const oldFilePath = path.join(__dirname, '..', event.posterUrl);
         if (fs.existsSync(oldFilePath)) {
@@ -337,14 +617,12 @@ const updateEvent = async (req, res) => {
       event.posterUrl = `/uploads/posters/${req.file.filename}`;
     }
 
-    // Reset status về pending nếu organizer chỉnh sửa sự kiện đã được duyệt
     if (event.status === 'approved' && req.user.role !== 'admin') {
       event.status = 'pending';
     }
 
     await event.save();
 
-    // Populate thông tin organizer
     await event.populate('organizer', 'name email');
 
     res.json({
@@ -505,3 +783,4 @@ module.exports = {
   getMyEvents,
   getEventStats
 };
+
