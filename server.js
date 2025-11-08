@@ -48,6 +48,18 @@ app.use("/api/v1/tickets", ticketRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/venues", venueRoutes);
 
+// Swagger UI - auto-generate basic OpenAPI spec from route files
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const { buildSpec } = require('./utils/swaggerGenerator');
+  const swaggerSpec = buildSpec();
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    // expose raw spec for debugging/inspection
+    app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
+} catch (err) {
+  console.error('Failed to setup Swagger UI:', err.message);
+}
+
 app.get("/", (req, res) => res.send("API is running..."));
 
 const PORT = process.env.PORT || 5000;
