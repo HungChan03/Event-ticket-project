@@ -93,7 +93,7 @@ function buildSpec() {
               name: pm[1],
               in: 'path',
               required: true,
-              schema: { type: 'string' }
+              schema: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' }
             }));
           }
 
@@ -211,7 +211,7 @@ function buildSpec() {
                   properties: {
                     title: { type: 'string' },
                     description: { type: 'string' },
-                    venue: { type: 'string', description: 'venueId or venue snapshot' },
+                    venue: { type: 'string', description: 'venueId or venue snapshot', pattern: '^[a-fA-F0-9]{24}$' },
                     startDate: { type: 'string', format: 'date-time' },
                     endDate: { type: 'string', format: 'date-time' },
                     capacity: { type: 'integer', minimum: 1 },
@@ -234,7 +234,7 @@ function buildSpec() {
                 example: {
                   title: 'Music Night',
                   description: 'Live show',
-                  venue: '6745d0f2c7b1f1a2b3c4d5e6',
+                  venue: '507f1f77bcf86cd799439023',
                   startDate: '2025-12-01T18:00:00Z',
                   capacity: 300,
                   categories: ['music'],
@@ -247,7 +247,7 @@ function buildSpec() {
                   properties: {
                     title: { type: 'string' },
                     description: { type: 'string' },
-                    venue: { type: 'string' },
+                    venue: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
                     startDate: { type: 'string', format: 'date-time' },
                     endDate: { type: 'string', format: 'date-time' },
                     capacity: { type: 'integer' },
@@ -307,7 +307,7 @@ function buildSpec() {
                 schema: {
                   type: 'object',
                   properties: {
-                    event: { type: 'string' },
+                    event: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
                     items: {
                       type: 'array',
                       items: {
@@ -324,7 +324,7 @@ function buildSpec() {
                   required: ['event', 'items']
                 },
                 example: {
-                  event: '6745d0f2c7b1f1a2b3c4d5e6',
+                  event: '507f1f77bcf86cd799439031',
                   items: [{ ticketType: 'Standard', quantity: 2 }],
                   buyerInfo: { name: 'John', email: 'john@example.com' }
                 }
@@ -336,9 +336,9 @@ function buildSpec() {
                     amount: { type: 'number' },
                     orderInfo: { type: 'string' },
                     orderId: { type: 'string' },
-                    localOrderId: { type: 'string' },
+                    localOrderId: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
                     items: { type: 'array', items: { type: 'object' } },
-                    event: { type: 'string' },
+                    event: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
                     buyerInfo: { type: 'object' }
                   },
                   required: ['amount']
@@ -349,12 +349,12 @@ function buildSpec() {
                 schema: {
                   type: 'object',
                   properties: {
-                    orderId: { type: 'string' },
+                    orderId: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
                     amount: { type: 'number' }
                   },
                   required: ['orderId']
                 },
-                example: { orderId: '675abc...', amount: 200000 }
+                example: { orderId: '507f1f77bcf86cd799439031', amount: 200000 }
               },
 
               // Admin APIs
