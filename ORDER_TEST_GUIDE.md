@@ -49,6 +49,39 @@ Ghi chú:
 
 ---
 
+## 1.1) Xem tất cả đơn của tôi
+- Endpoint: `GET /api/v1/orders`
+- Query: `page` (mặc định 1), `limit` (mặc định 20, tối đa 100)
+- Response 200:
+```json
+{ "items": [/* các order của bạn, mới nhất trước */], "total": 3, "page": 1, "limit": 20 }
+```
+
+## 1.2) Xem đơn của tôi theo ID
+- Endpoint: `GET /api/v1/orders/<ORDER_ID>`
+- Yêu cầu: Bearer token của chủ sở hữu order. Trả 403 nếu không phải owner, 404 nếu không tồn tại.
+
+## 1.3) Cập nhật đơn (owner)
+- Endpoint: `PUT /api/v1/orders/<ORDER_ID>`
+- Điều kiện: chưa thanh toán (`payment.status !== paid`), `status` chưa `completed/cancelled`, và chưa hết hạn (`expiresAt`).
+- Cho phép cập nhật: `items`, `buyerInfo`.
+- Khi đổi `items`: hệ thống kiểm tra tồn kho của event và tự tính lại `subtotal/total` (giữ nguyên `fees`).
+- Body ví dụ:
+```json
+{
+  "items": [
+    { "ticketType": "Standard", "quantity": 2 }
+  ],
+  "buyerInfo": { "name": "Nguyen Van B", "email": "buyer@example.com" }
+}
+```
+- Response 200:
+```json
+{ "message": "Order updated", "order": { /* order object */ } }
+```
+
+---
+
 ## 2) Lấy link thanh toán MoMo
 - Endpoint: `POST /api/v1/orders/momo/pay`
 - Body:
@@ -129,6 +162,22 @@ curl -X POST http://localhost:5000/api/v1/orders/momo/pay \
 # 3) Cancel (optional)
 curl -X POST http://localhost:5000/api/v1/orders/<ORDER_ID>/cancel \
   -H "Authorization: Bearer <USER_TOKEN>"
+
+# 3a) List my orders
+curl http://localhost:5000/api/v1/orders \
+  -H "Authorization: Bearer <USER_TOKEN>"
+
+# 3b) Get my order by ID
+curl http://localhost:5000/api/v1/orders/<ORDER_ID> \
+  -H "Authorization: Bearer <USER_TOKEN>"
+
+# 3c) Update my order (items + buyerInfo)
+curl -X PUT http://localhost:5000/api/v1/orders/<ORDER_ID> \
+  -H "Authorization: Bearer <USER_TOKEN>" -H "Content-Type: application/json" \
+  -d '{
+    "items":[{"ticketType":"Standard","quantity":2}],
+    "buyerInfo":{"name":"Buyer B","email":"buyer@example.com"}
+  }'
 
 # 4) Check event
 curl http://localhost:5000/api/v1/events/<EVENT_ID>
