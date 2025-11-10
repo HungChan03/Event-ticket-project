@@ -21,7 +21,10 @@ function buildSpec() {
           bearerFormat: 'JWT'
         }
       }
-    }
+    },
+    // Apply bearer auth to ALL endpoints by default; specific endpoints
+    // can override to public by setting operation.security = []
+    security: [{ bearerAuth: [] }]
   };
 
   // Read server.js to find route variable -> file and mount path mapping
@@ -77,94 +80,387 @@ function buildSpec() {
           const operation = {
             summary: desc || `${method.toUpperCase()} ${openapiPath}`,
             tags: [requires[varName]],
+            parameters: [],
             responses: {
               '200': { description: 'Successful response' }
             }
           };
 
-          // Add path parameters automatically for :param in route
-          const pathParams = [];
-          const paramRegex = /:([^/]+)/g;
-          let pm;
-          while ((pm = paramRegex.exec(routeSubPath)) !== null) {
-            const name = pm[1];
-            pathParams.push({
-              name,
+          // Auto-generate path parameters from route (e.g., :id, :eventId)
+          const pathParamMatches = [...routeSubPath.matchAll(/:([A-Za-z0-9_]+)/g)];
+          if (pathParamMatches.length) {
+            operation.parameters = pathParamMatches.map((pm) => ({
+              name: pm[1],
               in: 'path',
               required: true,
               schema: { type: 'string' }
-            });
+            }));
           }
 
-          if (pathParams.length) {
-            operation.parameters = pathParams;
+          // If explicitly declared Public in comments, clear security for this operation
+          if (/Public/i.test(access)) {
+            operation.security = [];
+          } else if (/Private/i.test(access)) {
+            // Kept for clarity; with global security this is redundant
+            operation.security = [{ bearerAuth: [] }];
           }
 
-          // For methods that usually have a request body, add a generic JSON body so Swagger shows the editor
-          if (['post', 'put', 'patch'].includes(method.toLowerCase())) {
-            // Provide a minimal object schema with an example so Swagger UI shows the body editor
-            const fullRoute = (mount + '/' + routeSubPath).replace(/\/+/g, '/');
-
-            // simple heuristics to create example bodies based on resource name
-            const makeExample = (route) => {
-              route = route.toLowerCase();
-              if (route.includes('/users')) {
-                return { name: 'Nguyen Van A', email: 'user@example.com', password: 'P@ssw0rd' };
-              }
-              if (route.includes('/events')) {
-                return {
-                  title: 'Live Concert',
-                  description: 'An exciting live concert event.',
-                  date: '2025-12-31T20:00:00.000Z',
-                  venueId: '64f8c0a0b9e6a5a1b2c3d4e5',
-                  price: 50000,
-                  capacity: 1000
-                };
-              }
-              if (route.includes('/venues')) {
-                return {
-                  name: 'Grand Hall',
-                  address: '123 Main St',
-                  city: 'Hanoi',
-                  capacity: 2000
-                };
-              }
-              if (route.includes('/tickets')) {
-                return {
-                  eventId: '64f8c0a0b9e6a5a1b2c3d4e5',
-                  type: 'regular',
-                  price: 50000,
-                  quantity: 1
-                };
-              }
-              if (route.includes('/orders')) {
-                return {
-                  tickets: [{ ticketId: '64f8c0a0b9e6a5a1b2c3d4e5', quantity: 2 }],
-                  paymentMethod: 'card'
-                };
-              }
-              // default generic example
-              return { key: 'value' };
-            };
-
-            const exampleBody = makeExample(mount + '/' + routeSubPath);
-
-            operation.requestBody = {
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    properties: {},
+          // Heuristic/requestBody mapping for well-known endpoints
+          if (['post', 'put', 'patch'].includes(method)) {
+            // Build absolute path as in spec (already computed in fullPath)
+            const bodySchemas = {
+              '/api/v1/auth/login': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    email: { type: 'string', format: 'email' },
+                    password: { type: 'string', format: 'password' }
                   },
-                  example: exampleBody
+                  required: ['email', 'password']
+                },
+                example: { email: 'user@example.com', password: '123456' }
+              },
+              '/api/v1/auth/register': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    email: { type: 'string', format: 'email' },
+                    password: { type: 'string', format: 'password' },
+                    phone: { type: 'string' },
+                    avatarUrl: { type: 'string' },
+                    role: { type: 'string', enum: ['user', 'organizer', 'admin'] }
+                  },
+                  required: ['name', 'email', 'password']
+                },
+                example: {
+                  name: 'John Doe',
+                  email: 'john@example.com',
+                  password: '123456',
+                  phone: '+84901234567'
                 }
               },
-              required: false
-            };
-          }
+              '/api/v1/auth/forgot-password': {
+                schema: {
+                  type: 'object',
+                  properties: { email: { type: 'string', format: 'email' } },
+                  required: ['email']
+                },
+                example: { email: 'user@example.com' }
+              },
+              '/api/v1/auth/reset-password': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    token: { type: 'string' },
+                    newPassword: { type: 'string', format: 'password' },
+                    autoLogin: { type: 'boolean' }
+                  },
+                  required: ['token', 'newPassword']
+                },
+                example: { token: 'reset-token', newPassword: 'NewPass123!', autoLogin: true }
+              },
 
-          if (/Private/i.test(access)) {
-            operation.security = [{ bearerAuth: [] }];
+              // Venues
+              '/api/v1/venues': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    address: { type: 'string' },
+                    city: { type: 'string' },
+                    state: { type: 'string' },
+                    country: { type: 'string' },
+                    capacity: { type: 'integer', minimum: 1 },
+                    description: { type: 'string' },
+                    amenities: { type: 'array', items: { type: 'string' } },
+                    status: { type: 'string', enum: ['active', 'inactive'] }
+                  },
+                  required: ['name', 'address', 'capacity']
+                },
+                example: {
+                  name: 'Saigon Hall',
+                  address: '123 Le Loi, Q1',
+                  city: 'Ho Chi Minh',
+                  capacity: 500,
+                  amenities: ['parking', 'wifi']
+                }
+              },
+              '/api/v1/venues/:id': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    address: { type: 'string' },
+                    city: { type: 'string' },
+                    state: { type: 'string' },
+                    country: { type: 'string' },
+                    capacity: { type: 'integer', minimum: 1 },
+                    description: { type: 'string' },
+                    amenities: { type: 'array', items: { type: 'string' } },
+                    status: { type: 'string', enum: ['active', 'inactive'] }
+                  }
+                },
+                example: { name: 'New name', capacity: 600 }
+              },
+
+              // Events
+              '/api/v1/events': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    description: { type: 'string' },
+                    venue: { type: 'string', description: 'venueId or venue snapshot' },
+                    startDate: { type: 'string', format: 'date-time' },
+                    endDate: { type: 'string', format: 'date-time' },
+                    capacity: { type: 'integer', minimum: 1 },
+                    categories: { type: 'array', items: { type: 'string' } },
+                    ticketTypes: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string' },
+                          price: { type: 'number' },
+                          quantity: { type: 'integer' }
+                        },
+                        required: ['name', 'price', 'quantity']
+                      }
+                    }
+                  },
+                  required: ['title', 'startDate', 'venue', 'ticketTypes']
+                },
+                example: {
+                  title: 'Music Night',
+                  description: 'Live show',
+                  venue: '6745d0f2c7b1f1a2b3c4d5e6',
+                  startDate: '2025-12-01T18:00:00Z',
+                  capacity: 300,
+                  categories: ['music'],
+                  ticketTypes: [{ name: 'Standard', price: 10, quantity: 200 }]
+                }
+              },
+              '/api/v1/events/:id': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    description: { type: 'string' },
+                    venue: { type: 'string' },
+                    startDate: { type: 'string', format: 'date-time' },
+                    endDate: { type: 'string', format: 'date-time' },
+                    capacity: { type: 'integer' },
+                    categories: { type: 'array', items: { type: 'string' } },
+                    ticketTypes: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string' },
+                          price: { type: 'number' },
+                          quantity: { type: 'integer' }
+                        }
+                      }
+                    }
+                  }
+                },
+                example: { title: 'Updated title' }
+              },
+
+              // Tickets
+              '/api/v1/tickets/checkin': {
+                schema: {
+                  type: 'object',
+                  properties: { qrCode: { type: 'string' } },
+                  required: ['qrCode']
+                },
+                example: { qrCode: 'QR-STRING' }
+              },
+
+              // Users self
+              '/api/v1/users/me': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    phone: { type: 'string' },
+                    avatarUrl: { type: 'string' }
+                  }
+                },
+                example: { name: 'New Name', phone: '+840912345678' }
+              },
+              '/api/v1/users/me/password': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    oldPassword: { type: 'string', format: 'password' },
+                    newPassword: { type: 'string', format: 'password' }
+                  },
+                  required: ['oldPassword', 'newPassword']
+                },
+                example: { oldPassword: 'Old123!', newPassword: 'New123!' }
+              },
+
+              // Orders
+              '/api/v1/orders': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    event: { type: 'string' },
+                    items: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          ticketType: { type: 'string' },
+                          quantity: { type: 'integer' }
+                        },
+                        required: ['ticketType', 'quantity']
+                      }
+                    },
+                    buyerInfo: { type: 'object' }
+                  },
+                  required: ['event', 'items']
+                },
+                example: {
+                  event: '6745d0f2c7b1f1a2b3c4d5e6',
+                  items: [{ ticketType: 'Standard', quantity: 2 }],
+                  buyerInfo: { name: 'John', email: 'john@example.com' }
+                }
+              },
+              '/api/v1/orders/momo/create': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    amount: { type: 'number' },
+                    orderInfo: { type: 'string' },
+                    orderId: { type: 'string' },
+                    localOrderId: { type: 'string' },
+                    items: { type: 'array', items: { type: 'object' } },
+                    event: { type: 'string' },
+                    buyerInfo: { type: 'object' }
+                  },
+                  required: ['amount']
+                },
+                example: { amount: 200000, orderInfo: 'Pay with MoMo' }
+              },
+              '/api/v1/orders/momo/pay': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    orderId: { type: 'string' },
+                    amount: { type: 'number' }
+                  },
+                  required: ['orderId']
+                },
+                example: { orderId: '675abc...', amount: 200000 }
+              },
+
+              // Admin APIs
+              '/api/v1/admin/users': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    email: { type: 'string', format: 'email' },
+                    password: { type: 'string', format: 'password' },
+                    role: { type: 'string' },
+                    phone: { type: 'string' },
+                    avatarUrl: { type: 'string' }
+                  },
+                  required: ['name', 'email', 'password']
+                },
+                example: { name: 'Admin', email: 'a@ex.com', password: 'Admin123!' }
+              },
+              '/api/v1/admin/users/:id': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    email: { type: 'string', format: 'email' },
+                    role: { type: 'string' },
+                    phone: { type: 'string' },
+                    avatarUrl: { type: 'string' },
+                    isVerified: { type: 'boolean' }
+                  }
+                },
+                example: { role: 'organizer', isVerified: true }
+              },
+              '/api/v1/admin/users/:id/password': {
+                schema: {
+                  type: 'object',
+                  properties: { newPassword: { type: 'string', format: 'password', minLength: 6 } },
+                  required: ['newPassword']
+                },
+                example: { newPassword: 'NewPass123!' }
+              },
+              '/api/v1/admin/events': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    description: { type: 'string' },
+                    venue: { type: 'string' },
+                    startDate: { type: 'string', format: 'date-time' },
+                    endDate: { type: 'string', format: 'date-time' },
+                    capacity: { type: 'integer' },
+                    categories: { type: 'array', items: { type: 'string' } },
+                    ticketTypes: { type: 'array', items: { type: 'object' } }
+                  },
+                  required: ['title', 'venue', 'startDate', 'ticketTypes']
+                }
+              },
+              '/api/v1/admin/events/:id': {
+                schema: { type: 'object', additionalProperties: true },
+                example: { title: 'Updated by admin' }
+              },
+              '/api/v1/admin/events/:id/approve': {
+                schema: { type: 'object', properties: { adminNote: { type: 'string' } } },
+                example: { adminNote: 'Looks good' }
+              },
+              '/api/v1/admin/events/:id/reject': {
+                schema: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] },
+                example: { reason: 'Incomplete information' }
+              },
+              '/api/v1/admin/events/:id/cancel': {
+                schema: { type: 'object', properties: { reason: { type: 'string' } } },
+                example: { reason: 'Force majeure' }
+              },
+              '/api/v1/admin/venues': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    address: { type: 'string' },
+                    city: { type: 'string' },
+                    state: { type: 'string' },
+                    country: { type: 'string' },
+                    capacity: { type: 'integer' },
+                    description: { type: 'string' },
+                    amenities: { type: 'array', items: { type: 'string' } }
+                  },
+                  required: ['name', 'address', 'capacity']
+                }
+              },
+              '/api/v1/admin/venues/:id': {
+                schema: { type: 'object', additionalProperties: true },
+                example: { capacity: 800 }
+              }
+            };
+
+            const known = bodySchemas[fullPath];
+            if (known) {
+              operation.requestBody = {
+                required: true,
+                content: {
+                  'application/json': {
+                    schema: known.schema,
+                    example: known.example
+                  }
+                }
+              };
+            }
           }
 
           spec.paths[openapiPath][method] = operation;
