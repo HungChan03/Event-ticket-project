@@ -1,0 +1,543 @@
+[
+  {
+    "_id": "507f1f77bcf86cd799439031",
+    "title": "Summer Music Festival 2024",
+    "description": "Join us for an amazing summer music festival featuring top artists from around the world. Experience live performances, food vendors, and unforgettable memories.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439023",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Da Nang Beach Stadium",
+      "address": "123 Beach Road",
+      "city": "Da Nang",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-07-15T18:00:00.000Z",
+    "endDate": "2024-07-17T23:00:00.000Z",
+    "capacity": 10000,
+    "categories": ["Music", "Festival", "Entertainment"],
+    "ticketTypes": [
+      {
+        "name": "VIP",
+        "price": 500000,
+        "quantity": 500,
+        "sold": 0
+      },
+      {
+        "name": "Standard",
+        "price": 200000,
+        "quantity": 5000,
+        "sold": 0
+      },
+      {
+        "name": "Early Bird",
+        "price": 150000,
+        "quantity": 2000,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439015",
+    "createdAt": "2024-01-25T10:00:00.000Z",
+    "updatedAt": "2024-01-25T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439032",
+    "title": "Tech Conference 2024",
+    "description": "Annual technology conference bringing together developers, entrepreneurs, and tech enthusiasts. Featuring keynote speakers, workshops, and networking opportunities.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439024",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Tech Hub Conference Center",
+      "address": "456 Innovation Street",
+      "city": "Hanoi",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-05-20T09:00:00.000Z",
+    "endDate": "2024-05-22T17:00:00.000Z",
+    "capacity": 800,
+    "categories": ["Technology", "Conference", "Business"],
+    "ticketTypes": [
+      {
+        "name": "Full Pass",
+        "price": 1000000,
+        "quantity": 300,
+        "sold": 0
+      },
+      {
+        "name": "Day Pass",
+        "price": 400000,
+        "quantity": 400,
+        "sold": 0
+      },
+      {
+        "name": "Student",
+        "price": 200000,
+        "quantity": 100,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439013",
+    "createdAt": "2024-01-26T10:00:00.000Z",
+    "updatedAt": "2024-01-26T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439033",
+    "title": "Classical Music Night",
+    "description": "An elegant evening of classical music featuring the National Symphony Orchestra. Experience timeless masterpieces in a beautiful historic venue.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439022",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Ho Chi Minh City Opera House",
+      "address": "7 Lam Son Square, District 1",
+      "city": "Ho Chi Minh City",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-06-10T19:30:00.000Z",
+    "endDate": "2024-06-10T22:00:00.000Z",
+    "capacity": 1800,
+    "categories": ["Music", "Classical", "Culture"],
+    "ticketTypes": [
+      {
+        "name": "Premium",
+        "price": 800000,
+        "quantity": 200,
+        "sold": 0
+      },
+      {
+        "name": "Standard",
+        "price": 500000,
+        "quantity": 1200,
+        "sold": 0
+      },
+      {
+        "name": "Balcony",
+        "price": 300000,
+        "quantity": 400,
+        "sold": 0
+      }
+    ],
+    "status": "pending",
+    "organizer": "507f1f77bcf86cd799439013",
+    "createdAt": "2024-01-27T10:00:00.000Z",
+    "updatedAt": "2024-01-27T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439034",
+    "title": "Business Networking Event",
+    "description": "Connect with industry leaders, entrepreneurs, and professionals. Includes panel discussions, workshops, and networking sessions.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439021",
+    "venueStatus": "active",
+    "venue": {
+      "name": "National Convention Center",
+      "address": "1 Thang Long Avenue",
+      "city": "Hanoi",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-04-15T08:00:00.000Z",
+    "endDate": "2024-04-15T18:00:00.000Z",
+    "capacity": 5000,
+    "categories": ["Business", "Networking", "Conference"],
+    "ticketTypes": [
+      {
+        "name": "VIP",
+        "price": 1500000,
+        "quantity": 200,
+        "sold": 0
+      },
+      {
+        "name": "Regular",
+        "price": 600000,
+        "quantity": 3000,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439013",
+    "createdAt": "2024-01-28T10:00:00.000Z",
+    "updatedAt": "2024-01-28T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439035",
+    "title": "Rock Concert Night",
+    "description": "High-energy rock concert featuring popular bands. Get ready for an electrifying night of music and entertainment.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439025",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Hai Phong Sports Complex",
+      "address": "789 Sports Avenue",
+      "city": "Hai Phong",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-08-10T19:00:00.000Z",
+    "endDate": "2024-08-10T23:00:00.000Z",
+    "capacity": 15000,
+    "categories": ["Music", "Rock", "Concert"],
+    "ticketTypes": [
+      {
+        "name": "VIP",
+        "price": 800000,
+        "quantity": 1000,
+        "sold": 0
+      },
+      {
+        "name": "General Admission",
+        "price": 300000,
+        "quantity": 10000,
+        "sold": 0
+      },
+      {
+        "name": "Early Bird",
+        "price": 200000,
+        "quantity": 4000,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439015",
+    "createdAt": "2024-01-29T10:00:00.000Z",
+    "updatedAt": "2024-01-29T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439036",
+    "title": "Traditional Music Festival",
+    "description": "Celebrate Vietnamese traditional music with performances from renowned artists. Experience the rich cultural heritage.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439026",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Can Tho Cultural Center",
+      "address": "321 River Street",
+      "city": "Can Tho",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-09-05T18:00:00.000Z",
+    "endDate": "2024-09-07T22:00:00.000Z",
+    "capacity": 2000,
+    "categories": ["Music", "Traditional", "Culture"],
+    "ticketTypes": [
+      {
+        "name": "Premium",
+        "price": 400000,
+        "quantity": 300,
+        "sold": 0
+      },
+      {
+        "name": "Standard",
+        "price": 200000,
+        "quantity": 1500,
+        "sold": 0
+      },
+      {
+        "name": "Student",
+        "price": 100000,
+        "quantity": 200,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439020",
+    "createdAt": "2024-01-30T10:00:00.000Z",
+    "updatedAt": "2024-01-30T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439037",
+    "title": "Beach Party Festival",
+    "description": "Ultimate beach party with DJs, live music, and amazing vibes. Join us for an unforgettable summer experience.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439027",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Nha Trang Beach Resort",
+      "address": "555 Coastal Road",
+      "city": "Nha Trang",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-07-20T16:00:00.000Z",
+    "endDate": "2024-07-20T23:00:00.000Z",
+    "capacity": 3000,
+    "categories": ["Music", "Party", "Beach"],
+    "ticketTypes": [
+      {
+        "name": "VIP",
+        "price": 600000,
+        "quantity": 200,
+        "sold": 0
+      },
+      {
+        "name": "Regular",
+        "price": 250000,
+        "quantity": 2500,
+        "sold": 0
+      },
+      {
+        "name": "Group (5+)",
+        "price": 200000,
+        "quantity": 300,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439015",
+    "createdAt": "2024-01-31T10:00:00.000Z",
+    "updatedAt": "2024-01-31T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439038",
+    "title": "Imperial Court Music Performance",
+    "description": "Experience the elegance of traditional imperial court music in a historic setting. A unique cultural experience.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439028",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Hue Imperial Theater",
+      "address": "88 Imperial Avenue",
+      "city": "Hue",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-06-15T19:00:00.000Z",
+    "endDate": "2024-06-15T21:30:00.000Z",
+    "capacity": 1200,
+    "categories": ["Music", "Traditional", "Culture", "History"],
+    "ticketTypes": [
+      {
+        "name": "Premium",
+        "price": 500000,
+        "quantity": 150,
+        "sold": 0
+      },
+      {
+        "name": "Standard",
+        "price": 300000,
+        "quantity": 900,
+        "sold": 0
+      },
+      {
+        "name": "Balcony",
+        "price": 200000,
+        "quantity": 150,
+        "sold": 0
+      }
+    ],
+    "status": "pending",
+    "organizer": "507f1f77bcf86cd799439020",
+    "createdAt": "2024-02-01T10:00:00.000Z",
+    "updatedAt": "2024-02-01T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439039",
+    "title": "Marina Music Festival",
+    "description": "Waterfront music festival with multiple stages, food vendors, and stunning ocean views. Don't miss this unique experience.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439029",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Vung Tau Marina",
+      "address": "999 Harbor Boulevard",
+      "city": "Vung Tau",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-08-25T14:00:00.000Z",
+    "endDate": "2024-08-25T23:00:00.000Z",
+    "capacity": 5000,
+    "categories": ["Music", "Festival", "Marina"],
+    "ticketTypes": [
+      {
+        "name": "VIP",
+        "price": 700000,
+        "quantity": 500,
+        "sold": 0
+      },
+      {
+        "name": "General",
+        "price": 350000,
+        "quantity": 4000,
+        "sold": 0
+      },
+      {
+        "name": "Early Bird",
+        "price": 250000,
+        "quantity": 500,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439015",
+    "createdAt": "2024-02-02T10:00:00.000Z",
+    "updatedAt": "2024-02-02T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439040",
+    "title": "Academic Conference 2024",
+    "description": "International academic conference bringing together researchers, scholars, and students. Features presentations, workshops, and networking.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439030",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Quy Nhon University Auditorium",
+      "address": "777 University Road",
+      "city": "Quy Nhon",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-10-10T08:00:00.000Z",
+    "endDate": "2024-10-12T17:00:00.000Z",
+    "capacity": 1500,
+    "categories": ["Education", "Conference", "Academic"],
+    "ticketTypes": [
+      {
+        "name": "Full Conference",
+        "price": 800000,
+        "quantity": 500,
+        "sold": 0
+      },
+      {
+        "name": "Day Pass",
+        "price": 300000,
+        "quantity": 800,
+        "sold": 0
+      },
+      {
+        "name": "Student",
+        "price": 150000,
+        "quantity": 200,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439018",
+    "createdAt": "2024-02-03T10:00:00.000Z",
+    "updatedAt": "2024-02-03T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439044",
+    "title": "Island Paradise Event",
+    "description": "Exclusive luxury event on a tropical island. Experience premium service, gourmet dining, and world-class entertainment.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439035",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Phu Quoc Island Resort",
+      "address": "111 Paradise Beach",
+      "city": "Phu Quoc",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-11-15T18:00:00.000Z",
+    "endDate": "2024-11-17T23:00:00.000Z",
+    "capacity": 4000,
+    "categories": ["Luxury", "Resort", "Entertainment"],
+    "ticketTypes": [
+      {
+        "name": "VIP All-Inclusive",
+        "price": 5000000,
+        "quantity": 100,
+        "sold": 0
+      },
+      {
+        "name": "Premium",
+        "price": 2000000,
+        "quantity": 500,
+        "sold": 0
+      },
+      {
+        "name": "Standard",
+        "price": 1000000,
+        "quantity": 3400,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439015",
+    "createdAt": "2024-02-04T10:00:00.000Z",
+    "updatedAt": "2024-02-04T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439045",
+    "title": "Flower Festival 2024",
+    "description": "Beautiful flower festival in the highlands. Enjoy garden tours, flower displays, photography workshops, and local cuisine.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439036",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Dalat Flower Garden",
+      "address": "222 Highland Road",
+      "city": "Dalat",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-12-01T09:00:00.000Z",
+    "endDate": "2024-12-03T18:00:00.000Z",
+    "capacity": 2500,
+    "categories": ["Festival", "Nature", "Culture", "Photography"],
+    "ticketTypes": [
+      {
+        "name": "Full Pass",
+        "price": 400000,
+        "quantity": 1000,
+        "sold": 0
+      },
+      {
+        "name": "Day Pass",
+        "price": 150000,
+        "quantity": 1200,
+        "sold": 0
+      },
+      {
+        "name": "Child",
+        "price": 50000,
+        "quantity": 300,
+        "sold": 0
+      }
+    ],
+    "status": "approved",
+    "organizer": "507f1f77bcf86cd799439020",
+    "createdAt": "2024-02-05T10:00:00.000Z",
+    "updatedAt": "2024-02-05T10:00:00.000Z"
+  },
+  {
+    "_id": "507f1f77bcf86cd799439046",
+    "title": "Heritage Cultural Show",
+    "description": "Experience the rich heritage of Hoi An through traditional performances, crafts, and cultural exhibitions in a historic setting.",
+    "posterUrl": "https://via.placeholder.com/800x600",
+    "venueId": "507f1f77bcf86cd799439037",
+    "venueStatus": "active",
+    "venue": {
+      "name": "Hoi An Ancient Town Hall",
+      "address": "333 Heritage Street",
+      "city": "Hoi An",
+      "country": "Vietnam"
+    },
+    "startDate": "2024-09-20T19:00:00.000Z",
+    "endDate": "2024-09-20T22:00:00.000Z",
+    "capacity": 800,
+    "categories": ["Culture", "Heritage", "Traditional"],
+    "ticketTypes": [
+      {
+        "name": "Premium",
+        "price": 350000,
+        "quantity": 150,
+        "sold": 0
+      },
+      {
+        "name": "Standard",
+        "price": 200000,
+        "quantity": 550,
+        "sold": 0
+      },
+      {
+        "name": "Student",
+        "price": 100000,
+        "quantity": 100,
+        "sold": 0
+      }
+    ],
+    "status": "pending",
+    "organizer": "507f1f77bcf86cd799439020",
+    "createdAt": "2024-02-06T10:00:00.000Z",
+    "updatedAt": "2024-02-06T10:00:00.000Z"
+  }
+]
+

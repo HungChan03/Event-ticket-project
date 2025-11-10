@@ -53,9 +53,7 @@ try {
   const swaggerUi = require('swagger-ui-express');
   const { buildSpec } = require('./utils/swaggerGenerator');
   const swaggerSpec = buildSpec();
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-    // expose raw spec for debugging/inspection
-    app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 } catch (err) {
   console.error('Failed to setup Swagger UI:', err.message);
 }
