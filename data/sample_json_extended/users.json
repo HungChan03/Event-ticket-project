@@ -1,6 +1,8 @@
 [
   {
-    "_id": "507f1f77bcf86cd799439011",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439011"
+    },
     "name": "Admin User",
     "email": "admin@eventticket.com",
     "passwordHash": "$2a$10$cPKKpIuKbNummw9113HcUubeDbbK1JFOx70LlP6utodoU1R4.dwdy",
@@ -12,7 +14,9 @@
     "updatedAt": "2024-01-15T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439012",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439012"
+    },
     "name": "John Doe",
     "email": "john.doe@example.com",
     "passwordHash": "$2a$10$T3fxX50GPzFsmJ.M3jUHMuipvQS7FW3JiJVrNODB8S.K.PeIe7Nua",
@@ -24,7 +28,9 @@
     "updatedAt": "2024-01-16T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439013",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439013"
+    },
     "name": "Event Organizer",
     "email": "organizer@eventticket.com",
     "passwordHash": "$2a$10$c1PtSRfF5lbrZK4uCXeoJOiHnqFlQNrbrx2GxiNb/311pmQpP2GRO",
@@ -36,7 +42,9 @@
     "updatedAt": "2024-01-17T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439014",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439014"
+    },
     "name": "Jane Smith",
     "email": "jane.smith@example.com",
     "passwordHash": "$2a$10$T3fxX50GPzFsmJ.M3jUHMuipvQS7FW3JiJVrNODB8S.K.PeIe7Nua",
@@ -48,7 +56,9 @@
     "updatedAt": "2024-01-18T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439015",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439015"
+    },
     "name": "Music Festival Org",
     "email": "musicfest@example.com",
     "passwordHash": "$2a$10$c1PtSRfF5lbrZK4uCXeoJOiHnqFlQNrbrx2GxiNb/311pmQpP2GRO",
@@ -60,7 +70,9 @@
     "updatedAt": "2024-01-19T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439016",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439016"
+    },
     "name": "Mike Johnson",
     "email": "mike.johnson@example.com",
     "passwordHash": "$2a$10$kLsAaRVobsrlUJAmgQ3on.SicVxwmQ36LNaCPwfCiZT2JTTkJHT7m",
@@ -72,7 +84,9 @@
     "updatedAt": "2024-01-20T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439017",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439017"
+    },
     "name": "Sarah Williams",
     "email": "sarah.williams@example.com",
     "passwordHash": "$2a$10$RrFvTo6FOZ/7HVanj92EQeuCzDTW/NhG0FoiRLvHRdVt91vYYQPge",
@@ -84,7 +98,9 @@
     "updatedAt": "2024-01-21T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439018",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439018"
+    },
     "name": "Tech Events Co",
     "email": "techevents@example.com",
     "passwordHash": "$2a$10$h0w0mhFHxgzrS/cYsYXG0unXqJcnvo1QnCghKdIymKU7hqyx3SW9C",
@@ -96,7 +112,9 @@
     "updatedAt": "2024-01-22T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439019",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439019"
+    },
     "name": "David Brown",
     "email": "david.brown@example.com",
     "passwordHash": "$2a$10$oerXnFiv0rkpriETI2redurMTrN8m.U79P1uijNL1nsL9E3QuKYVy",
@@ -108,7 +126,9 @@
     "updatedAt": "2024-01-23T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439020",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439020"
+    },
     "name": "Cultural Events Org",
     "email": "culturevents@example.com",
     "passwordHash": "$2a$10$7GN248lQnYwrbA.5FuR9/Oxk.0dpbC/Xf65s5.abqZW.xaVoUt4LC",
@@ -120,7 +140,9 @@
     "updatedAt": "2024-01-24T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439025",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439025"
+    },
     "name": "Emily Davis",
     "email": "emily.davis@example.com",
     "passwordHash": "$2a$10$T3fxX50GPzFsmJ.M3jUHMuipvQS7FW3JiJVrNODB8S.K.PeIe7Nua",
@@ -132,7 +154,9 @@
     "updatedAt": "2024-01-25T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439026",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439026"
+    },
     "name": "Robert Miller",
     "email": "robert.miller@example.com",
     "passwordHash": "$2a$10$kLsAaRVobsrlUJAmgQ3on.SicVxwmQ36LNaCPwfCiZT2JTTkJHT7m",
@@ -144,7 +168,9 @@
     "updatedAt": "2024-01-26T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439027",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439027"
+    },
     "name": "Sports Events Management",
     "email": "sportsevents@example.com",
     "passwordHash": "$2a$10$c1PtSRfF5lbrZK4uCXeoJOiHnqFlQNrbrx2GxiNb/311pmQpP2GRO",
@@ -156,7 +182,9 @@
     "updatedAt": "2024-01-27T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439028",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439028"
+    },
     "name": "Lisa Anderson",
     "email": "lisa.anderson@example.com",
     "passwordHash": "$2a$10$RrFvTo6FOZ/7HVanj92EQeuCzDTW/NhG0FoiRLvHRdVt91vYYQPge",
@@ -168,4 +196,3 @@
     "updatedAt": "2024-01-28T10:00:00.000Z"
   }
 ]
-

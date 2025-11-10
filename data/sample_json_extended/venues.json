@@ -1,6 +1,8 @@
 [
   {
-    "_id": "507f1f77bcf86cd799439021",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439021"
+    },
     "name": "National Convention Center",
     "address": "1 Thang Long Avenue",
     "city": "Hanoi",
@@ -8,13 +10,21 @@
     "country": "Vietnam",
     "capacity": 5000,
     "description": "Modern convention center with state-of-the-art facilities",
-    "amenities": ["Parking", "WiFi", "Air Conditioning", "Catering", "Stage"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Air Conditioning",
+      "Catering",
+      "Stage"
+    ],
     "status": "active",
     "createdAt": "2024-01-20T10:00:00.000Z",
     "updatedAt": "2024-01-20T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439022",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439022"
+    },
     "name": "Ho Chi Minh City Opera House",
     "address": "7 Lam Son Square, District 1",
     "city": "Ho Chi Minh City",
@@ -22,13 +32,21 @@
     "country": "Vietnam",
     "capacity": 1800,
     "description": "Historic French colonial building, perfect for cultural events",
-    "amenities": ["Parking", "WiFi", "Air Conditioning", "Sound System", "Lighting"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Air Conditioning",
+      "Sound System",
+      "Lighting"
+    ],
     "status": "active",
     "createdAt": "2024-01-21T10:00:00.000Z",
     "updatedAt": "2024-01-21T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439023",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439023"
+    },
     "name": "Da Nang Beach Stadium",
     "address": "123 Beach Road",
     "city": "Da Nang",
@@ -36,13 +54,21 @@
     "country": "Vietnam",
     "capacity": 10000,
     "description": "Outdoor stadium with beach view, ideal for concerts and festivals",
-    "amenities": ["Parking", "WiFi", "Food Stalls", "Restrooms", "First Aid"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Food Stalls",
+      "Restrooms",
+      "First Aid"
+    ],
     "status": "active",
     "createdAt": "2024-01-22T10:00:00.000Z",
     "updatedAt": "2024-01-22T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439024",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439024"
+    },
     "name": "Tech Hub Conference Center",
     "address": "456 Innovation Street",
     "city": "Hanoi",
@@ -50,13 +76,21 @@
     "country": "Vietnam",
     "capacity": 800,
     "description": "Modern tech-focused venue with advanced AV equipment",
-    "amenities": ["Parking", "WiFi", "Projector", "Microphones", "Recording Studio"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Projector",
+      "Microphones",
+      "Recording Studio"
+    ],
     "status": "active",
     "createdAt": "2024-01-23T10:00:00.000Z",
     "updatedAt": "2024-01-23T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439025",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439025"
+    },
     "name": "Hai Phong Sports Complex",
     "address": "789 Sports Avenue",
     "city": "Hai Phong",
@@ -64,13 +98,22 @@
     "country": "Vietnam",
     "capacity": 15000,
     "description": "Large sports complex suitable for major events and concerts",
-    "amenities": ["Parking", "WiFi", "Food Court", "Restrooms", "First Aid", "Security"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Food Court",
+      "Restrooms",
+      "First Aid",
+      "Security"
+    ],
     "status": "active",
     "createdAt": "2024-01-24T10:00:00.000Z",
     "updatedAt": "2024-01-24T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439026",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439026"
+    },
     "name": "Can Tho Cultural Center",
     "address": "321 River Street",
     "city": "Can Tho",
@@ -78,13 +121,22 @@
     "country": "Vietnam",
     "capacity": 2000,
     "description": "Cultural center showcasing local arts and performances",
-    "amenities": ["Parking", "WiFi", "Air Conditioning", "Sound System", "Lighting", "Catering"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Air Conditioning",
+      "Sound System",
+      "Lighting",
+      "Catering"
+    ],
     "status": "active",
     "createdAt": "2024-01-25T10:00:00.000Z",
     "updatedAt": "2024-01-25T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439027",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439027"
+    },
     "name": "Nha Trang Beach Resort",
     "address": "555 Coastal Road",
     "city": "Nha Trang",
@@ -92,13 +144,22 @@
     "country": "Vietnam",
     "capacity": 3000,
     "description": "Beachfront resort venue perfect for outdoor events and parties",
-    "amenities": ["Parking", "WiFi", "Beach Access", "Restaurant", "Bar", "Pool"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Beach Access",
+      "Restaurant",
+      "Bar",
+      "Pool"
+    ],
     "status": "active",
     "createdAt": "2024-01-26T10:00:00.000Z",
     "updatedAt": "2024-01-26T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439028",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439028"
+    },
     "name": "Hue Imperial Theater",
     "address": "88 Imperial Avenue",
     "city": "Hue",
@@ -106,13 +167,21 @@
     "country": "Vietnam",
     "capacity": 1200,
     "description": "Historic theater with traditional architecture, ideal for cultural performances",
-    "amenities": ["Parking", "WiFi", "Air Conditioning", "Sound System", "Traditional Decor"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Air Conditioning",
+      "Sound System",
+      "Traditional Decor"
+    ],
     "status": "active",
     "createdAt": "2024-01-27T10:00:00.000Z",
     "updatedAt": "2024-01-27T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439029",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439029"
+    },
     "name": "Vung Tau Marina",
     "address": "999 Harbor Boulevard",
     "city": "Vung Tau",
@@ -120,13 +189,22 @@
     "country": "Vietnam",
     "capacity": 5000,
     "description": "Waterfront venue with stunning ocean views, perfect for festivals",
-    "amenities": ["Parking", "WiFi", "Marina Access", "Food Stalls", "Restrooms", "Security"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Marina Access",
+      "Food Stalls",
+      "Restrooms",
+      "Security"
+    ],
     "status": "active",
     "createdAt": "2024-01-28T10:00:00.000Z",
     "updatedAt": "2024-01-28T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439030",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439030"
+    },
     "name": "Quy Nhon University Auditorium",
     "address": "777 University Road",
     "city": "Quy Nhon",
@@ -134,13 +212,22 @@
     "country": "Vietnam",
     "capacity": 1500,
     "description": "Modern university auditorium with excellent acoustics",
-    "amenities": ["Parking", "WiFi", "Air Conditioning", "Projector", "Sound System", "Stage"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Air Conditioning",
+      "Projector",
+      "Sound System",
+      "Stage"
+    ],
     "status": "active",
     "createdAt": "2024-01-29T10:00:00.000Z",
     "updatedAt": "2024-01-29T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439035",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439035"
+    },
     "name": "Phu Quoc Island Resort",
     "address": "111 Paradise Beach",
     "city": "Phu Quoc",
@@ -148,13 +235,22 @@
     "country": "Vietnam",
     "capacity": 4000,
     "description": "Tropical island resort venue for exclusive events",
-    "amenities": ["Parking", "WiFi", "Beach Access", "Resort Facilities", "Spa", "Restaurant"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Beach Access",
+      "Resort Facilities",
+      "Spa",
+      "Restaurant"
+    ],
     "status": "active",
     "createdAt": "2024-01-30T10:00:00.000Z",
     "updatedAt": "2024-01-30T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439036",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439036"
+    },
     "name": "Dalat Flower Garden",
     "address": "222 Highland Road",
     "city": "Dalat",
@@ -162,13 +258,21 @@
     "country": "Vietnam",
     "capacity": 2500,
     "description": "Beautiful garden venue surrounded by flowers and nature",
-    "amenities": ["Parking", "WiFi", "Garden Access", "Catering", "Photography Spots"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Garden Access",
+      "Catering",
+      "Photography Spots"
+    ],
     "status": "active",
     "createdAt": "2024-01-31T10:00:00.000Z",
     "updatedAt": "2024-01-31T10:00:00.000Z"
   },
   {
-    "_id": "507f1f77bcf86cd799439037",
+    "_id": {
+      "$oid": "507f1f77bcf86cd799439037"
+    },
     "name": "Hoi An Ancient Town Hall",
     "address": "333 Heritage Street",
     "city": "Hoi An",
@@ -176,10 +280,15 @@
     "country": "Vietnam",
     "capacity": 800,
     "description": "Historic town hall in UNESCO World Heritage site",
-    "amenities": ["Parking", "WiFi", "Air Conditioning", "Historic Setting", "Cultural Tours"],
+    "amenities": [
+      "Parking",
+      "WiFi",
+      "Air Conditioning",
+      "Historic Setting",
+      "Cultural Tours"
+    ],
     "status": "active",
     "createdAt": "2024-02-01T10:00:00.000Z",
     "updatedAt": "2024-02-01T10:00:00.000Z"
   }
 ]
-

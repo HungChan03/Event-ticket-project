@@ -105,7 +105,7 @@ const createUser = async (req, res) => {
       role: role || 'user',
       phone,
       avatarUrl,
-      isVerified: true // Admin tạo user thì mặc định đã verify
+      isVerified: true 
     });
     
     await newUser.save();
