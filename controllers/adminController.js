@@ -6,41 +6,15 @@ const bcrypt = require('bcryptjs');
 // Lấy danh sách tất cả users (có phân trang)
 const getAllUsers = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    
-    // Tìm kiếm theo tên hoặc email
-    const searchQuery = req.query.search || '';
-    const searchRegex = new RegExp(searchQuery, 'i');
-    
-    const filter = {
-      $or: [
-        { name: searchRegex },
-        { email: searchRegex }
-      ]
-    };
-    
-    const users = await User.find(filter)
+
+    const users = await User.find()
       .select('-passwordHash -resetPasswordToken -resetPasswordExpires')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    const totalUsers = await User.countDocuments(filter);
-    const totalPages = Math.ceil(totalUsers / limit);
     
     res.status(200).json({
       success: true,
       data: {
-        users,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalUsers,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
-        }
+        users
+      
       }
     });
   } catch (error) {
@@ -105,7 +79,7 @@ const createUser = async (req, res) => {
       role: role || 'user',
       phone,
       avatarUrl,
-      isVerified: true // Admin tạo user thì mặc định đã verify
+      isVerified: true 
     });
     
     await newUser.save();
@@ -235,7 +209,7 @@ const deleteUser = async (req, res) => {
       });
     }
     
-    // Không cho phép admin xóa chính mình (tạm thời comment để test)
+    // Không cho phép admin xóa chính mình 
     // if (req.user && req.user.id === id) {
     //   return res.status(400).json({
     //     success: false,

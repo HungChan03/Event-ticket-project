@@ -371,7 +371,14 @@ function buildSpec() {
                   },
                   required: ['name', 'email', 'password']
                 },
-                example: { name: 'Admin', email: 'a@ex.com', password: 'Admin123!' }
+                example: {
+                  name: 'Admin User',
+                  email: 'admin@example.com',
+                  password: 'Admin123!',
+                  role: 'admin',
+                  phone: '+84901234567',
+                  avatarUrl: 'https://example.com/avatar.jpg'
+                }
               },
               '/api/v1/admin/users/:id': {
                 schema: {
@@ -385,7 +392,14 @@ function buildSpec() {
                     isVerified: { type: 'boolean' }
                   }
                 },
-                example: { role: 'organizer', isVerified: true }
+                example: { 
+                  name: 'Updated User',
+                  email: 'updated@example.com',
+                  role: 'organizer',
+                  phone: '+84901234568',
+                  avatarUrl: 'https://example.com/avatar.jpg',
+                  isVerified: true 
+                }
               },
               '/api/v1/admin/users/:id/password': {
                 schema: {
