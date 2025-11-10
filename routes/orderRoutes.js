@@ -9,19 +9,26 @@ const {
   createOrder,
   payOrderWithMomo,
   cancelOrderForUser,
+  getMyOrders,
+  getMyOrderById,
+  updateOrderForUser,
 } = require('../controllers/orderController');
 const { requireAuth } = require('../middlewares/authMiddleware');
 
-// Placeholder base route
-router.get('/', (req, res) => {
-  res.json({ message: 'Order routes' });
-});
+// List my orders (owner)
+router.get('/', requireAuth, getMyOrders);
 
 // Create order (requires user auth)
 router.post('/', requireAuth, createOrder);
 
 // Cancel order (user) - POST /api/v1/orders/:id/cancel
 router.post('/:id/cancel', requireAuth, cancelOrderForUser);
+
+// Get my order by id (owner)
+router.get('/:id', requireAuth, getMyOrderById);
+
+// Update my order (owner, before payment/completion)
+router.put('/:id', requireAuth, updateOrderForUser);
 
 // MoMo payment routes
 router.post('/momo/create', createMomoPayment);

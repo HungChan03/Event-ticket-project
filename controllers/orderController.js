@@ -89,7 +89,7 @@ exports.createOrder = async (req, res) => {
       payment: { method: "momo", status: "pending" },
       status: "processing",
       buyerInfo: req.body.buyerInfo || {},
-      expiresAt: new Date(Date.now() + (parseInt(process.env.ORDER_EXPIRE_MIN || "1") * 60 * 1000)),
+      expiresAt: new Date(Date.now() + (parseInt(process.env.ORDER_EXPIRE_MIN || "15") * 60 * 1000)),
     }).catch(() => null);
 
     if (!orderDoc) return res.status(500).json({ message: "Create order failed" });
@@ -460,6 +460,88 @@ exports.momoIPN = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ message: "Handle MoMo IPN failed", error: err.message });
+  }
+};
+
+exports.getMyOrders = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    const page = Math.max(1, parseInt(req.query.page || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || "20")));
+    const skip = (page - 1) * limit;
+    const [docs, total] = await Promise.all([
+      Order.find({ buyer: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Order.countDocuments({ buyer: userId }),
+    ]);
+    const now = Date.now();
+    const items = docs.map((o) => ({
+      ...o,
+      expired: !!(o.expiresAt && now > new Date(o.expiresAt).getTime()),
+    }));
+    return res.json({ items, total, page, limit });
+  } catch (err) {
+    return res.status(500).json({ message: "Get orders failed", error: err.message });
+  }
+};
+
+exports.getMyOrderById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const orderDoc = await Order.findById(id).lean();
+    if (!orderDoc) return res.status(404).json({ message: "Order not found" });
+    if (String(orderDoc.buyer) !== String(req.user?._id)) return res.status(403).json({ message: "Not allowed" });
+    const expired = !!(orderDoc.expiresAt && Date.now() > new Date(orderDoc.expiresAt).getTime());
+    return res.json({ ...orderDoc, expired });
+  } catch (err) {
+    return res.status(500).json({ message: "Get order failed", error: err.message });
+  }
+};
+
+exports.updateOrderForUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const order = await Order.findById(id).catch(() => null);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (String(order.buyer) !== String(req.user?._id)) return res.status(403).json({ message: "Not allowed" });
+    if (order.status === "cancelled" || order.status === "completed") return res.status(409).json({ message: "Order is not editable" });
+    if (order.payment?.status === "paid") return res.status(409).json({ message: "Order already paid" });
+    if (order.expiresAt && Date.now() > new Date(order.expiresAt).getTime()) return res.status(410).json({ message: "Order expired" });
+
+    let updatedItems = order.items;
+    let subtotal = order.subtotal;
+    const itemsInput = Array.isArray(req.body.items) ? req.body.items : null;
+    if (itemsInput) {
+      const event = await Event.findById(order.event).lean();
+      if (!event) return res.status(400).json({ message: "Event not found" });
+      let newSubtotal = 0;
+      const normalized = [];
+      for (const it of itemsInput) {
+        const tt = event.ticketTypes.find((t) => t.name === it.ticketType);
+        const qty = Number(it?.quantity || 0);
+        if (!tt || qty <= 0) return res.status(400).json({ message: "Invalid ticketType or quantity" });
+        const remaining = (tt.quantity || 0) - (tt.sold || 0);
+        if (qty > remaining) return res.status(400).json({ message: `Not enough '${tt.name}' tickets. Remaining: ${remaining}` });
+        newSubtotal += tt.price * qty;
+        normalized.push({ ticketType: tt.name, price: tt.price, quantity: qty });
+      }
+      updatedItems = normalized;
+      subtotal = newSubtotal;
+    }
+
+    const buyerInfo = req.body.buyerInfo ? { ...order.buyerInfo, ...req.body.buyerInfo } : order.buyerInfo;
+    const fees = order.fees || 0;
+    const total = subtotal + fees;
+
+    order.items = updatedItems;
+    order.subtotal = subtotal;
+    order.total = total;
+    order.buyerInfo = buyerInfo;
+
+    await order.save().catch(() => {});
+    return res.json({ message: "Order updated", order });
+  } catch (err) {
+    return res.status(500).json({ message: "Update order failed", error: err.message });
   }
 };
 
