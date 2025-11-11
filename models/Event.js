@@ -17,16 +17,18 @@ const mongoose = require("mongoose");
 */
 
 const ticketTypeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true, min: 0 },
-  quantity: { type: Number, required: true, min: 0 },
-  sold: { type: Number, default: 0, min: 0 }
-}, { _id: false });
+  name: { type: String, required: true },  
+  price: { type: Number, required: true, min: 0 }, 
+  quantity: { type: Number, required: true, min: 0 },  
+  sold: { type: Number, default: 0, min: 0 }  
+}, { _id: false });  // Không tạo _id riêng cho embedded document
 
 const eventSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   description: { type: String },
   posterUrl: { type: String },
+
+  // Venue reference và snapshot
   venueId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Venue'
@@ -47,7 +49,8 @@ const eventSchema = new mongoose.Schema({
   capacity: { type: Number, default: 0 },
   categories: [String],
   ticketTypes: { type: [ticketTypeSchema], default: [] },
-  status: { type: String, enum: ["draft", "pending", "approved", "rejected", "cancelled"], default: "pending" },
+  status: { type: String, enum: ["draft", "pending", "approved", "rejected", "cancelled"], 
+    default: "pending" }, // Trạng thái "pending" chờ duyệt
   organizer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
 }, { timestamps: true });
 
