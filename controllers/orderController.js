@@ -15,7 +15,7 @@ const MOMO_ENDPOINT = process.env.MOMO_ENDPOINT || "test-payment.momo.vn"; // ho
 const MOMO_CREATE_PATH = process.env.MOMO_CREATE_PATH || "/v2/gateway/api/create";
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
 const MOMO_REDIRECT_URL = process.env.MOMO_REDIRECT_URL || `${BASE_URL}/api/v1/orders/momo/return`;
-const MOMO_IPN_URL = process.env.MOMO_IPN_URL || `${BASE_URL}/api/v1/orders/momo/ipn`;
+const MOMO_IPN_URL = process.env.MOMO_IPN_URL || '';
 
 function hmacSha256Hex(secret, data) {
   return crypto.createHmac("sha256", secret).update(data).digest("hex");
@@ -203,11 +203,12 @@ exports.payOrderWithMomo = async (req, res) => {
     const orderInfo = `Pay for order #${orderId}`;
     const extraData = ""; // optional base64 string
     const requestType = "captureWallet";
+    const EFFECTIVE_IPN_URL = MOMO_IPN_URL || MOMO_REDIRECT_URL;
     const rawSignature = buildCreateSignature({
       accessKey: MOMO_ACCESS_KEY,
       amount: amountStr,
       extraData,
-      ipnUrl: MOMO_IPN_URL,
+      ipnUrl: EFFECTIVE_IPN_URL,
       orderId: orderDoc._id.toString(),
       orderInfo,
       partnerCode: MOMO_PARTNER_CODE,
@@ -226,7 +227,7 @@ exports.payOrderWithMomo = async (req, res) => {
       orderId: orderDoc._id.toString(),
       orderInfo,
       redirectUrl: MOMO_REDIRECT_URL,
-      ipnUrl: MOMO_IPN_URL,
+      ipnUrl: EFFECTIVE_IPN_URL,
       extraData,
       requestType,
       signature,
@@ -256,96 +257,6 @@ exports.payOrderWithMomo = async (req, res) => {
   }
 };
 
-// POST /api/v1/orders/momo/create
-// Body: { amount: number|string, orderInfo?: string, orderId?: string, items?, event?, buyerInfo?, localOrderId? }
-exports.createMomoPayment = async (req, res) => {
-  try {
-    const amountStr = String(req.body.amount || "0");
-    if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) {
-      return res.status(400).json({ message: "Invalid amount" });
-    }
-
-    // Create or reuse an order in DB (minimal fields for now)
-    const requestId = `${MOMO_PARTNER_CODE}${Date.now()}`;
-    const orderId = req.body.orderId || requestId;
-    const orderInfo = req.body.orderInfo || "Pay with MoMo";
-
-    let orderDoc = null;
-    if (req.body.localOrderId) {
-      orderDoc = await Order.findById(req.body.localOrderId).catch(() => null);
-    }
-    if (!orderDoc) {
-      orderDoc = await Order.create({
-        buyer: req.user?._id || undefined,
-        event: req.body.event || undefined,
-        items: Array.isArray(req.body.items) ? req.body.items : [],
-        subtotal: Number(amountStr),
-        fees: 0,
-        total: Number(amountStr),
-        payment: { method: "momo", status: "pending" },
-        status: "processing",
-        buyerInfo: req.body.buyerInfo || {},
-      }).catch(() => null);
-    }
-
-    const extraData = ""; // optional base64 string
-    const requestType = "captureWallet";
-    const rawSignature = buildCreateSignature({
-      accessKey: MOMO_ACCESS_KEY,
-      amount: amountStr,
-      extraData,
-      ipnUrl: MOMO_IPN_URL,
-      orderId,
-      orderInfo,
-      partnerCode: MOMO_PARTNER_CODE,
-      redirectUrl: MOMO_REDIRECT_URL,
-      requestId,
-      requestType,
-    });
-
-    const signature = hmacSha256Hex(MOMO_SECRET_KEY, rawSignature);
-
-    const payloadObj = {
-      partnerCode: MOMO_PARTNER_CODE,
-      accessKey: MOMO_ACCESS_KEY,
-      requestId,
-      amount: amountStr,
-      orderId,
-      orderInfo,
-      redirectUrl: MOMO_REDIRECT_URL,
-      ipnUrl: MOMO_IPN_URL,
-      extraData,
-      requestType,
-      signature,
-      lang: "vi",
-    };
-
-    const fullUrl = process.env.MOMO_FULL_CREATE_URL || `https://${MOMO_ENDPOINT}${MOMO_CREATE_PATH}`;
-
-    try {
-      const { data: json } = await axios.post(fullUrl, payloadObj, {
-        headers: { "Content-Type": "application/json" },
-        timeout: 15000,
-      });
-      if (orderDoc) {
-        orderDoc.payment.providerData = json;
-        await orderDoc.save().catch(() => {});
-      }
-      return res.status(201).json({
-        message: "MoMo payment created",
-        payUrl: json.payUrl || json.deeplink,
-        result: json,
-        orderId,
-        requestId,
-        localOrderId: orderDoc?._id || null,
-      });
-    } catch (e) {
-      return res.status(502).json({ message: "MoMo request error", error: e?.message, details: e?.response?.data });
-    }
-  } catch (err) {
-    return res.status(500).json({ message: "Create MoMo payment failed", error: err.message });
-  }
-};
 
 // GET /api/v1/orders/momo/return
 // MoMo redirects user here after payment
@@ -403,65 +314,6 @@ exports.momoReturn = async (req, res) => {
   }
 };
 
-// POST /api/v1/orders/momo/ipn
-// MoMo server-to-server notification
-exports.momoIPN = async (req, res) => {
-  try {
-    const body = req.body || {};
-    const { resultCode, orderId } = body;
-
-    const orderDoc = await Order.findOne({
-      $or: [
-        { "payment.providerData.orderId": orderId },
-        { _id: orderId },
-      ],
-    }).catch(() => null);
-
-    if (String(resultCode) === "0") {
-      if (orderDoc) {
-        const alreadyPaid = orderDoc.payment?.status === "paid";
-        orderDoc.payment.status = "paid";
-        orderDoc.payment.paidAt = orderDoc.payment.paidAt || new Date();
-        orderDoc.status = "completed";
-        orderDoc.payment.providerData = { ...(orderDoc.payment.providerData || {}), ...body };
-        await orderDoc.save().catch(() => {});
-        if (!alreadyPaid) {
-          await issueTicketsForOrder(orderDoc).catch(() => {});
-          await incrementEventSold(orderDoc.event, orderDoc.items).catch(() => {});
-          // send receipt email once
-          if (!orderDoc.emailSentAt) {
-            try {
-              const evt = await Event.findById(orderDoc.event).lean();
-              const to = orderDoc?.buyerInfo?.email || process.env.RECEIPT_TEST_TO || null;
-              if (to) {
-                await sendOrderReceipt(orderDoc.toObject ? orderDoc.toObject() : orderDoc, evt, to);
-                orderDoc.emailSentAt = new Date();
-                await orderDoc.save().catch(() => {});
-              }
-            } catch (_) {}
-          }
-        }
-      }
-    } else {
-      if (orderDoc) {
-        orderDoc.payment.status = "failed";
-        orderDoc.status = "created";
-        orderDoc.payment.providerData = { ...(orderDoc.payment.providerData || {}), ...body };
-        await orderDoc.save().catch(() => {});
-      }
-    }
-
-    // Respond per MoMo requirement
-    return res.json({
-      partnerCode: MOMO_PARTNER_CODE,
-      orderId,
-      resultCode: 0,
-      message: "IPN received",
-    });
-  } catch (err) {
-    return res.status(500).json({ message: "Handle MoMo IPN failed", error: err.message });
-  }
-};
 
 exports.getMyOrders = async (req, res) => {
   try {

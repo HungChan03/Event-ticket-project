@@ -75,6 +75,13 @@ function buildSpec() {
           const fullPath = (mount + '/' + routeSubPath).replace(/\/+/g, '/').replace(/\/$/, '');
           const openapiPath = fullPath.replace(/:([^/]+)/g, '{$1}');
 
+          const skipPaths = new Set([
+            '/api/v1/orders/momo/create',
+            '/api/v1/orders/momo/ipn',
+            '/api/v1/orders/momo/return'
+          ]);
+          if (skipPaths.has(fullPath) || fullPath.toLowerCase().includes('/ipn')) continue;
+
           if (!spec.paths[openapiPath]) spec.paths[openapiPath] = {};
 
           const operation = {
@@ -329,21 +336,31 @@ function buildSpec() {
                   buyerInfo: { name: 'John', email: 'john@example.com' }
                 }
               },
-              '/api/v1/orders/momo/create': {
+              '/api/v1/orders/:id': {
                 schema: {
                   type: 'object',
                   properties: {
-                    amount: { type: 'number' },
-                    orderInfo: { type: 'string' },
-                    orderId: { type: 'string' },
-                    localOrderId: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
-                    items: { type: 'array', items: { type: 'object' } },
-                    event: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
+                    items: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          ticketType: { type: 'string' },
+                          quantity: { type: 'integer' }
+                        },
+                        required: ['ticketType', 'quantity']
+                      }
+                    },
                     buyerInfo: { type: 'object' }
                   },
-                  required: ['amount']
+                  additionalProperties: false
                 },
-                example: { amount: 200000, orderInfo: 'Pay with MoMo' }
+                example: {
+                  items: [
+                    { ticketType: 'Standard', quantity: 2 }
+                  ],
+                  buyerInfo: { name: 'Nguyen Van B', email: 'buyer@example.com' }
+                }
               },
               '/api/v1/orders/momo/pay': {
                 schema: {
@@ -354,7 +371,7 @@ function buildSpec() {
                   },
                   required: ['orderId']
                 },
-                example: { orderId: '507f1f77bcf86cd799439031', amount: 200000 }
+                example: { orderId: '<ORDER_ID>' }
               },
 
               // Admin APIs
